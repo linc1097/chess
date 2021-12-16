@@ -1,39 +1,18 @@
 import pygame
-import math
 from piece import Piece
 from constants import Constants as C
 from chess_utils import Utils
 from move import Move
+from player import Player, HumanPlayer
 
 class Game:
 
 	board = [[None]*8 for _ in range(8)]
 
-	def draw_board(self, screen):
-		screen.fill(C.LIGHT_BROWN)
-
-		for i in range(8):
-			for j in range(8):
-				if (i+j) % 2 == 1:
-					rect = pygame.Rect(C.SQUARE_SIZE*i, C.SQUARE_SIZE*j, C.SQUARE_SIZE, C.SQUARE_SIZE)
-					pygame.draw.rect(screen, C.DARK_BROWN, rect)
-
-
-	def draw_pieces(self, screen):
-		for i in range(8):
-			for j in range(8):
-				if self.board[i][j]:
-					self.board[i][j].draw(screen)
-
 	def pixel_to_board_coord(self, pixel_x, pixel_y):
 		board_x = pixel_x/C.SQUARE_SIZE
 		board_y = pixel_y/C.SQUARE_SIZE
 		return (int(math.floor(board_x)),int(math.floor(board_y)))
-
-	#def move(self, piece, x, y):
-	#	piece.x = x
-	#	piece.y = y
-	#	self.board[x][y] = piece
 
 	def move(self, move):
 		if move.en_passant:
@@ -45,15 +24,8 @@ class Game:
 			move.piece.move(move)
 			self.board[move.x][move.y] = move.piece
 
-	def highlight_avaialable_moves(self, screen, piece):
-		moves = Utils.piece_moves(self.board, piece)
-		for move in moves:
-			rect = pygame.Rect(C.SQUARE_SIZE*move.x, C.SQUARE_SIZE*move.y, C.SQUARE_SIZE, C.SQUARE_SIZE)
-			pygame.draw.rect(screen, C.BLACK, rect)
-			#image = pygame.Surface((C.SQUARE_SIZE, C.SQUARE_SIZE))
-			#image.set_alpha(C.OPACITY)
-			#screen.blit(image, (move.x*C.SQUARE_SIZE, move.y*C.SQUARE_SIZE))
-
+	def game_over(self):
+		return False
 
 	def play(self):
 		pygame.init()
@@ -66,48 +38,28 @@ class Game:
 		running = True
 		x = 0
 		y = 0
+		white = HumanPlayer(color = C.WHITE)
+		black = HumanPlayer(color = C.BLACK)
 		while running:
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					running = False
-
-				elif event.type == pygame.MOUSEBUTTONDOWN:
-					if event.button == C.LEFT_CLICK:
-						if not dragging:
-							mouse_x, mouse_y = event.pos
-							moving_piece_coord = Game.pixel_to_board_coord(self, mouse_x, mouse_y)
-							if self.board[moving_piece_coord[0]][moving_piece_coord[1]]:
-								dragging = True
-								moving_piece = self.board[moving_piece_coord[0]][moving_piece_coord[1]]
-								self.board[moving_piece_coord[0]][moving_piece_coord[1]] = None
-								offset_x = moving_piece_coord[0]*C.SQUARE_SIZE - mouse_x
-								offset_y = moving_piece_coord[1]*C.SQUARE_SIZE - mouse_y
-								x = moving_piece_coord[0]*C.SQUARE_SIZE
-								y = moving_piece_coord[1]*C.SQUARE_SIZE
-
-				elif event.type == pygame.MOUSEBUTTONUP:
-					if event.button == C.LEFT_CLICK:
-						if dragging:
-							mouse_x, mouse_y = event.pos
-							new_coordinates = Game.pixel_to_board_coord(self, mouse_x, mouse_y)
-							move = Move(moving_piece, new_coordinates[0], new_coordinates[1])
-							self.move(move)
-							dragging = False
-							moving_piece = None
-
-				elif event.type == pygame.MOUSEMOTION:
-					if dragging:
-						mouse_x, mouse_y = event.pos
-						x = mouse_x + offset_x
-						y = mouse_y + offset_y
-
-			self.draw_board(screen)
-			self.draw_pieces(screen)
-			if dragging:
-				self.highlight_avaialable_moves(screen, moving_piece)
-				moving_piece.draw(screen, x = x, y = y)
-
+			Utils.draw_board(screen)
+			Utils.draw_pieces(screen, self.board)
 			pygame.display.update()
+
+			move = white.make_move(screen, self.board)
+			self.move(move)
+
+			Utils.draw_board(screen)
+			Utils.draw_pieces(screen, self.board)
+			pygame.display.update()
+
+			if self.game_over():
+				break
+
+			move = black.make_move(screen, self.board)
+			self.move(move)
+
+			if self.game_over():
+				break
 
 	def setup_game(self):
 		white_king = pygame.image.load('images/white_king.png')

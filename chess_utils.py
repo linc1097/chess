@@ -1,8 +1,46 @@
+import pygame
+import math
 from constants import Constants as C
 from piece import Piece
 from move import Move
 
 class Utils:
+
+	@staticmethod
+	def contains_same_coordinates(moves, x, y):
+		for move in moves:
+			if move.x == x and move.y == y:
+				return True
+		return False
+
+	@staticmethod
+	def pixel_to_board_coord(pixel_x, pixel_y):
+		board_x = pixel_x/C.SQUARE_SIZE
+		board_y = pixel_y/C.SQUARE_SIZE
+		return (int(math.floor(board_x)),int(math.floor(board_y)))
+
+	@staticmethod
+	def highlight_moves(screen, moves):
+		for move in moves:
+			rect = pygame.Rect(C.SQUARE_SIZE*move.x, C.SQUARE_SIZE*move.y, C.SQUARE_SIZE, C.SQUARE_SIZE)
+			pygame.draw.rect(screen, C.BLACK, rect)
+
+	@staticmethod
+	def draw_board(screen):
+		screen.fill(C.LIGHT_BROWN)
+
+		for i in range(8):
+			for j in range(8):
+				if (i+j) % 2 == 1:
+					rect = pygame.Rect(C.SQUARE_SIZE*i, C.SQUARE_SIZE*j, C.SQUARE_SIZE, C.SQUARE_SIZE)
+					pygame.draw.rect(screen, C.DARK_BROWN, rect)
+
+	@staticmethod
+	def draw_pieces(screen, board):
+		for i in range(8):
+			for j in range(8):
+				if board[i][j]:
+					board[i][j].draw(screen)
 
 	@staticmethod
 	def all_legal_moves(board, color):
