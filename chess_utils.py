@@ -4,13 +4,16 @@ from move import Move
 
 class Utils:
 
-	def all_legal_moves(self, board, color):
+	@staticmethod
+	def all_legal_moves(board, color):
 		moves = []
 		for row in board:
 			for piece in row:
 				if piece:
+					pass
 
-	def legal_moves(self, board, piece):
+	@staticmethod
+	def legal_moves(board, piece):
 		x = piece.x
 		y = piece.y
 		color = piece.color
@@ -18,22 +21,39 @@ class Utils:
 		moves = []
 
 		if piece.kind == C.PAWN:
-			moves.extend(self.pawn_moves(board, piece))
+			moves.extend(Utils.pawn_moves(board, piece))
 		elif piece.kind == C.KNIGHT:
-			moves.extend(self.bishop_moves(board, piece))
+			moves.extend(Utils.bishop_moves(board, piece))
 		elif piece.kind == C.BISHOP:
-			moves.extend(self.bishop_moves(board, piece))
+			moves.extend(Utils.bishop_moves(board, piece))
 		elif piece.kind == C.ROOK:
-			moves.extend(self.rook_moves(board, piece))
+			moves.extend(Utils.rook_moves(board, piece))
 		elif piece.kind == C.QUEEN:
-			moves.extend(self.bishop_moves(board, piece))
-			moves.extend(self.rook_moves(board, piece))
+			moves.extend(Utils.bishop_moves(board, piece))
+			moves.extend(Utils.rook_moves(board, piece))
 		elif piece.kind == C.KING:
-			moves.extend(self.king_moves(board, piece))
+			moves.extend(Utils.king_moves(board, piece))
 
 		return moves
 
-	def pawn_moves(self, board, piece, attack = False):
+	@staticmethod
+	def piece_moves(board, piece):
+
+		if piece.kind == C.PAWN:
+			return Utils.pawn_moves(board, piece)
+		elif piece.kind == C.BISHOP:
+			return Utils.bishop_moves(board, piece)
+		elif piece.kind == C.KNIGHT:
+			return Utils.knight_moves(board, piece)
+		elif piece.kind == C.ROOK:
+			return Utils.rook_moves(board, piece)
+		elif piece.kind == C.QUEEN:
+			return Utils.rook_moves(board, piece) + Utils.bishop_moves(board, piece)
+		elif piece.kind == C.KING:
+			return Utils.king_moves(board, piece)
+
+	@staticmethod
+	def pawn_moves(board, piece, attack = False):
 		x = piece.x
 		y = piece.y
 		color = piece.color
@@ -52,26 +72,26 @@ class Utils:
 								moves.append(Move(piece, x, y-1, promote = i))
 						else:
 							moves.append(Move(piece, x, y-1))
-
-			if x+1 < 7 and board[x+1][y-1]:
-				if y-1 == 0:
-					for i in range(2, 6, 1):
-						moves.append(Move(piece, x+1, y-1, promote = i))
-				else:
-					moves.append(Move(piece, x+1, y-1))
-			elif board[x+1][y]:
-				if board[x+1][y].en_passant:
-					moves.append(Move(piece, x+1, y-1, en_passant = True))
-
-			if x-1 > 0 and board[x-1][y-1]:
-				if y-1 == 0:
-					for i in range(2, 6, 1):
-						moves.append(Move(piece, x-1, y-1, promote = i))
-				else:
-					moves.append(Move(piece, x-1, y-1))
-			elif board[x-1][y]:
-				if board[x-1][y].en_passant:
-					moves.append(Move(piece, x-1, y-1, en_passant = True))
+			if x+1 < 7:				
+				if board[x+1][y-1] and board[x+1][y-1].color != color:
+					if y-1 == 0:
+						for i in range(2, 6, 1):
+							moves.append(Move(piece, x+1, y-1, promote = i))
+					else:
+						moves.append(Move(piece, x+1, y-1))
+				elif board[x+1][y] and board[x+1][y].color != color:
+					if board[x+1][y].en_passant:
+						moves.append(Move(piece, x+1, y-1, en_passant = True))
+			if x-1 > 0:
+				if board[x-1][y-1] and board[x-1][y-1].color != color:
+					if y-1 == 0:
+						for i in range(2, 6, 1):
+							moves.append(Move(piece, x-1, y-1, promote = i))
+					else:
+						moves.append(Move(piece, x-1, y-1))
+				elif board[x-1][y] and board[x-1][y].color != color:
+					if board[x-1][y].en_passant:
+						moves.append(Move(piece, x-1, y-1, en_passant = True))
 		else: #if color == black:
 			if not attack:
 				if not piece.moved:
@@ -85,30 +105,31 @@ class Utils:
 								moves.append(Move(piece, x, y+1, promote = i))
 						else:
 							moves.append(Move(piece, x, y+1))
-
-			if x+1 < 7 and board[x+1][y+1]:
-				if y+1 == 7:
-					for i in range(2, 6, 1):
-						moves.append(Move(piece, x+1, y+1, promote = i))
-				else:
-					moves.append(Move(piece, x+1, y+1))
-			elif board[x+1][y]:
-				if board[x+1][y].en_passant:
-					moves.append(Move(piece, x+1, y+1, en_passant = True))
-
-			if x-1 > 0 and board[x-1][y+1]:
-				if y+1 == 7:
-					for i in range(2, 6, 1):
-						moves.append(Move(piece, x-1, y+1, promote = i))
-				else:
-					moves.append(Move(piece, x-1, y+1))
-			elif board[x-1][y]:
-				if board[x-1][y].en_passant:
-					moves.append(Move(piece, x-1, y+1, en_passant = True))
+			if x+1 < 7:
+				if board[x+1][y+1] and board[x+1][y+1].color != color:
+					if y+1 == 7:
+						for i in range(2, 6, 1):
+							moves.append(Move(piece, x+1, y+1, promote = i))
+					else:
+						moves.append(Move(piece, x+1, y+1))
+				elif board[x+1][y] and board[x+1][y].color != color:
+					if board[x+1][y].en_passant:
+						moves.append(Move(piece, x+1, y+1, en_passant = True))
+			if x-1 > 0:
+				if board[x-1][y+1] and board[x-1][y+1].color != color:
+					if y+1 == 7:
+						for i in range(2, 6, 1):
+							moves.append(Move(piece, x-1, y+1, promote = i))
+					else:
+						moves.append(Move(piece, x-1, y+1))
+				elif board[x-1][y] and board[x-1][y].color != color:
+					if board[x-1][y].en_passant:
+						moves.append(Move(piece, x-1, y+1, en_passant = True))
 
 		return moves
 
-	def king_moves(self, board, piece, attack = False):
+	@staticmethod
+	def king_moves(board, piece, attack = False):
 		x = piece.x
 		y = piece.y
 		color = piece.color
@@ -119,10 +140,10 @@ class Utils:
 		valid_moves = []
 
 		for move in moves:
-			if move[C.X] > 7 or move[C.X] < 0 or move[C.Y] > 7 or move[C.Y] < 0:
+			if move.x > 7 or move.x < 0 or move.y > 7 or move.y < 0:
 				continue
-			elif board[move[C.X]][move[C.Y]]:
-				if board[move[C.X]][move[C.Y]].color == color:
+			elif board[move.x][move.y]:
+				if board[move.x][move.y].color == color:
 					if attack:
 						valid_moves.append(move)
 				else:
@@ -132,7 +153,8 @@ class Utils:
 
 		return valid_moves
 
-	def knight_moves(self, board, piece, attack = False):
+	@staticmethod
+	def knight_moves(board, piece, attack = False):
 		x = piece.x
 		y = piece.y
 		color = piece.color
@@ -143,10 +165,10 @@ class Utils:
 		valid_moves = []
 
 		for move in moves:
-			if move[C.X] > 7 or move[C.X] < 0 or move[C.Y] > 7 or move[C.Y] < 0:
+			if move.x > 7 or move.x < 0 or move.y > 7 or move.y < 0:
 				continue
-			elif board[move[C.X]][move[C.Y]]:
-				if board[move[C.X]][move[C.Y]].color == color:
+			elif board[move.x][move.y]:
+				if board[move.x][move.y].color == color:
 					if attack:
 						valid_moves.append(move)
 				else:
@@ -156,7 +178,8 @@ class Utils:
 
 		return valid_moves
 
-	def bishop_moves(self, board, piece, attack = False):
+	@staticmethod
+	def bishop_moves(board, piece, attack = False):
 		x = piece.x
 		y = piece.y
 		color = piece.color
@@ -220,7 +243,8 @@ class Utils:
 
 		return moves
 
-	def rook_moves(self, board, piece, attack = False):
+	@staticmethod
+	def rook_moves(board, piece, attack = False):
 		x = piece.x
 		y = piece.y
 		color = piece.color

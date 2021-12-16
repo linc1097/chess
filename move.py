@@ -15,5 +15,8 @@ class Move:
 		self.castle = castle
 		self.en_passant = en_passant
 		self.piece = piece
-		self.x = y
-		self.y = x
+		self.x = x
+		self.y = y
+
+	def __str__(self):
+		return '(' + str(self.x) + ', ' + str(self.y) + ')'

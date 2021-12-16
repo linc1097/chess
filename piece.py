@@ -45,6 +45,14 @@ class Piece:
 
 		screen.blit(self.image, (x, y))
 
-	def move(self, x, y):
-		self.x = x
-		self.y = y
+	def move(self, move):
+		if not self.moved:
+			self.moved = True
+		if self.kind == C.PAWN:
+			if abs(self.y - move.y) > 1:
+				self.en_passant = True
+			elif self.en_passant:
+				self.en_passant = False
+		self.x = move.x
+		self.y = move.y
+

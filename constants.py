@@ -16,3 +16,5 @@ class Constants:
 
 	DARK_BROWN = (101, 67, 33)
 	LIGHT_BROWN = (188, 158, 130)
+	BLACK = (0, 0, 0)
+	OPACITY = 150

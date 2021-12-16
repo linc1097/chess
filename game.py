@@ -3,6 +3,7 @@ import math
 from piece import Piece
 from constants import Constants as C
 from chess_utils import Utils
+from move import Move
 
 class Game:
 
@@ -29,13 +30,30 @@ class Game:
 		board_y = pixel_y/C.SQUARE_SIZE
 		return (int(math.floor(board_x)),int(math.floor(board_y)))
 
-	def move(self, piece, x, y):
-		piece.x = x
-		piece.y = y
-		self.board[x][y] = piece
+	#def move(self, piece, x, y):
+	#	piece.x = x
+	#	piece.y = y
+	#	self.board[x][y] = piece
 
-	def pieces_moves(self, piece):
-		pass
+	def move(self, move):
+		if move.en_passant:
+			if move.piece.color == C.WHITE:
+				pass
+			else:
+				pass
+		else:
+			move.piece.move(move)
+			self.board[move.x][move.y] = move.piece
+
+	def highlight_avaialable_moves(self, screen, piece):
+		moves = Utils.piece_moves(self.board, piece)
+		for move in moves:
+			rect = pygame.Rect(C.SQUARE_SIZE*move.x, C.SQUARE_SIZE*move.y, C.SQUARE_SIZE, C.SQUARE_SIZE)
+			pygame.draw.rect(screen, C.BLACK, rect)
+			#image = pygame.Surface((C.SQUARE_SIZE, C.SQUARE_SIZE))
+			#image.set_alpha(C.OPACITY)
+			#screen.blit(image, (move.x*C.SQUARE_SIZE, move.y*C.SQUARE_SIZE))
+
 
 	def play(self):
 		pygame.init()
@@ -72,7 +90,8 @@ class Game:
 						if dragging:
 							mouse_x, mouse_y = event.pos
 							new_coordinates = Game.pixel_to_board_coord(self, mouse_x, mouse_y)
-							self.move(moving_piece, new_coordinates[0], new_coordinates[1])
+							move = Move(moving_piece, new_coordinates[0], new_coordinates[1])
+							self.move(move)
 							dragging = False
 							moving_piece = None
 
@@ -83,9 +102,10 @@ class Game:
 						y = mouse_y + offset_y
 
 			self.draw_board(screen)
-			if dragging:
-				moving_piece.draw(screen, x = x, y = y)
 			self.draw_pieces(screen)
+			if dragging:
+				self.highlight_avaialable_moves(screen, moving_piece)
+				moving_piece.draw(screen, x = x, y = y)
 
 			pygame.display.update()
 
