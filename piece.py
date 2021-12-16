@@ -1,4 +1,4 @@
-from constants import Constants
+from constants import Constants as C
 
 class Piece:
 	image = None
@@ -6,6 +6,8 @@ class Piece:
 	kind = 0
 	x = 0
 	y = 0
+	moved = False
+	en_passant = False
 
 	def __init__(self, color, kind, image, x, y):
 		self.color = color
@@ -15,22 +17,22 @@ class Piece:
 		self.y = y
 
 	def __str__(self):
-		if self.color == Constants.WHITE:
+		if self.color == C.WHITE:
 			string = 'W'
-		if self.color == Constants.BLACK:
+		if self.color == C.BLACK:
 			string = 'B'
 
-		if self.kind == Constants.PAWN:
+		if self.kind == C.PAWN:
 			string += 'P'
-		elif self.kind == Constants.BISHOP:
+		elif self.kind == C.BISHOP:
 			string += 'B'
-		elif self.kind == Constants.KNIGHT:
+		elif self.kind == C.KNIGHT:
 			string += 'N'
-		elif self.kind == Constants.ROOK:
+		elif self.kind == C.ROOK:
 			string += 'R'
-		elif self.kind == Constants.QUEEN:
+		elif self.kind == C.QUEEN:
 			string += 'Q'
-		elif self.kind == Constants.KING:
+		elif self.kind == C.KING:
 			string += 'K'
 
 		string += str(self.x) + str(self.y)
@@ -38,8 +40,8 @@ class Piece:
 
 	def draw(self, screen, x = None, y = None):
 		if not x and not y:
-			x = self.x*Constants.SQUARE_SIZE
-			y = self.y*Constants.SQUARE_SIZE
+			x = self.x*C.SQUARE_SIZE
+			y = self.y*C.SQUARE_SIZE
 
 		screen.blit(self.image, (x, y))
 

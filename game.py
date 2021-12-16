@@ -1,20 +1,21 @@
 import pygame
 import math
 from piece import Piece
-from constants import Constants
+from constants import Constants as C
+from chess_utils import Utils
 
 class Game:
 
 	board = [[None]*8 for _ in range(8)]
 
 	def draw_board(self, screen):
-		screen.fill(Constants.LIGHT_BROWN)
+		screen.fill(C.LIGHT_BROWN)
 
 		for i in range(8):
 			for j in range(8):
 				if (i+j) % 2 == 1:
-					rect = pygame.Rect(Constants.SQUARE_SIZE*i, Constants.SQUARE_SIZE*j, Constants.SQUARE_SIZE, Constants.SQUARE_SIZE)
-					pygame.draw.rect(screen, Constants.DARK_BROWN, rect)
+					rect = pygame.Rect(C.SQUARE_SIZE*i, C.SQUARE_SIZE*j, C.SQUARE_SIZE, C.SQUARE_SIZE)
+					pygame.draw.rect(screen, C.DARK_BROWN, rect)
 
 
 	def draw_pieces(self, screen):
@@ -24,8 +25,8 @@ class Game:
 					self.board[i][j].draw(screen)
 
 	def pixel_to_board_coord(self, pixel_x, pixel_y):
-		board_x = pixel_x/Constants.SQUARE_SIZE
-		board_y = pixel_y/Constants.SQUARE_SIZE
+		board_x = pixel_x/C.SQUARE_SIZE
+		board_y = pixel_y/C.SQUARE_SIZE
 		return (int(math.floor(board_x)),int(math.floor(board_y)))
 
 	def move(self, piece, x, y):
@@ -33,9 +34,12 @@ class Game:
 		piece.y = y
 		self.board[x][y] = piece
 
+	def pieces_moves(self, piece):
+		pass
+
 	def play(self):
 		pygame.init()
-		screen = pygame.display.set_mode((Constants.BOARD_SIZE, Constants.BOARD_SIZE))
+		screen = pygame.display.set_mode((C.BOARD_SIZE, C.BOARD_SIZE))
 		pygame.display.set_caption('CHESS')
 
 
@@ -50,7 +54,7 @@ class Game:
 					running = False
 
 				elif event.type == pygame.MOUSEBUTTONDOWN:
-					if event.button == Constants.LEFT_CLICK:
+					if event.button == C.LEFT_CLICK:
 						if not dragging:
 							mouse_x, mouse_y = event.pos
 							moving_piece_coord = Game.pixel_to_board_coord(self, mouse_x, mouse_y)
@@ -58,13 +62,13 @@ class Game:
 								dragging = True
 								moving_piece = self.board[moving_piece_coord[0]][moving_piece_coord[1]]
 								self.board[moving_piece_coord[0]][moving_piece_coord[1]] = None
-								offset_x = moving_piece_coord[0]*Constants.SQUARE_SIZE - mouse_x
-								offset_y = moving_piece_coord[1]*Constants.SQUARE_SIZE - mouse_y
-								x = moving_piece_coord[0]*Constants.SQUARE_SIZE
-								y = moving_piece_coord[1]*Constants.SQUARE_SIZE
+								offset_x = moving_piece_coord[0]*C.SQUARE_SIZE - mouse_x
+								offset_y = moving_piece_coord[1]*C.SQUARE_SIZE - mouse_y
+								x = moving_piece_coord[0]*C.SQUARE_SIZE
+								y = moving_piece_coord[1]*C.SQUARE_SIZE
 
 				elif event.type == pygame.MOUSEBUTTONUP:
-					if event.button == Constants.LEFT_CLICK:
+					if event.button == C.LEFT_CLICK:
 						if dragging:
 							mouse_x, mouse_y = event.pos
 							new_coordinates = Game.pixel_to_board_coord(self, mouse_x, mouse_y)
@@ -87,53 +91,53 @@ class Game:
 
 	def setup_game(self):
 		white_king = pygame.image.load('images/white_king.png')
-		white_king = pygame.transform.scale(white_king, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		white_king = pygame.transform.scale(white_king, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		white_queen = pygame.image.load('images/white_queen.png')
-		white_queen = pygame.transform.scale(white_queen, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		white_queen = pygame.transform.scale(white_queen, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		white_rook = pygame.image.load('images/white_rook.png')
-		white_rook = pygame.transform.scale(white_rook, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		white_rook = pygame.transform.scale(white_rook, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		white_knight = pygame.image.load('images/white_knight.png')
-		white_knight = pygame.transform.scale(white_knight, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		white_knight = pygame.transform.scale(white_knight, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		white_bishop = pygame.image.load('images/white_bishop.png')
-		white_bishop = pygame.transform.scale(white_bishop, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		white_bishop = pygame.transform.scale(white_bishop, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		white_pawn = pygame.image.load('images/white_pawn.png')
-		white_pawn = pygame.transform.scale(white_pawn, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		white_pawn = pygame.transform.scale(white_pawn, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 
 		black_king = pygame.image.load('images/black_king.png')
-		black_king = pygame.transform.scale(black_king, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		black_king = pygame.transform.scale(black_king, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		black_queen = pygame.image.load('images/black_queen.png')
-		black_queen = pygame.transform.scale(black_queen, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		black_queen = pygame.transform.scale(black_queen, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		black_rook = pygame.image.load('images/black_rook.png')
-		black_rook = pygame.transform.scale(black_rook, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		black_rook = pygame.transform.scale(black_rook, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		black_knight = pygame.image.load('images/black_knight.png')
-		black_knight = pygame.transform.scale(black_knight, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		black_knight = pygame.transform.scale(black_knight, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		black_bishop = pygame.image.load('images/black_bishop.png')
-		black_bishop = pygame.transform.scale(black_bishop, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		black_bishop = pygame.transform.scale(black_bishop, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 		black_pawn = pygame.image.load('images/black_pawn.png')
-		black_pawn = pygame.transform.scale(black_pawn, (Constants.SQUARE_SIZE, Constants.SQUARE_SIZE))
+		black_pawn = pygame.transform.scale(black_pawn, (C.SQUARE_SIZE, C.SQUARE_SIZE))
 
 		pieces = []
 		for i in range(8):
-			pieces.append(Piece(Constants.BLACK, Constants.PAWN, black_pawn, i, 1))
-			pieces.append(Piece(Constants.WHITE, Constants.PAWN, white_pawn, i, 6))
+			pieces.append(Piece(C.BLACK, C.PAWN, black_pawn, i, 1))
+			pieces.append(Piece(C.WHITE, C.PAWN, white_pawn, i, 6))
 
-		pieces.append(Piece(Constants.BLACK, Constants.ROOK, black_rook, 0, 0))
-		pieces.append(Piece(Constants.BLACK, Constants.KNIGHT, black_knight, 1, 0))
-		pieces.append(Piece(Constants.BLACK, Constants.BISHOP, black_bishop, 2, 0))
-		pieces.append(Piece(Constants.BLACK, Constants.QUEEN, black_queen, 3, 0))
-		pieces.append(Piece(Constants.BLACK, Constants.KING, black_king, 4, 0))
-		pieces.append(Piece(Constants.BLACK, Constants.BISHOP, black_bishop, 5, 0))
-		pieces.append(Piece(Constants.BLACK, Constants.KNIGHT, black_knight, 6, 0))
-		pieces.append(Piece(Constants.BLACK, Constants.ROOK, black_rook, 7, 0))
+		pieces.append(Piece(C.BLACK, C.ROOK, black_rook, 0, 0))
+		pieces.append(Piece(C.BLACK, C.KNIGHT, black_knight, 1, 0))
+		pieces.append(Piece(C.BLACK, C.BISHOP, black_bishop, 2, 0))
+		pieces.append(Piece(C.BLACK, C.QUEEN, black_queen, 3, 0))
+		pieces.append(Piece(C.BLACK, C.KING, black_king, 4, 0))
+		pieces.append(Piece(C.BLACK, C.BISHOP, black_bishop, 5, 0))
+		pieces.append(Piece(C.BLACK, C.KNIGHT, black_knight, 6, 0))
+		pieces.append(Piece(C.BLACK, C.ROOK, black_rook, 7, 0))
 
-		pieces.append(Piece(Constants.WHITE, Constants.ROOK, white_rook, 0, 7))
-		pieces.append(Piece(Constants.WHITE, Constants.KNIGHT, white_knight, 1, 7))
-		pieces.append(Piece(Constants.WHITE, Constants.BISHOP, white_bishop, 2, 7))
-		pieces.append(Piece(Constants.WHITE, Constants.QUEEN, white_queen, 3, 7))
-		pieces.append(Piece(Constants.WHITE, Constants.KING, white_king, 4, 7))
-		pieces.append(Piece(Constants.WHITE, Constants.BISHOP, white_bishop, 5, 7))
-		pieces.append(Piece(Constants.WHITE, Constants.KNIGHT, white_knight, 6, 7))
-		pieces.append(Piece(Constants.WHITE, Constants.ROOK, white_rook, 7, 7))
+		pieces.append(Piece(C.WHITE, C.ROOK, white_rook, 0, 7))
+		pieces.append(Piece(C.WHITE, C.KNIGHT, white_knight, 1, 7))
+		pieces.append(Piece(C.WHITE, C.BISHOP, white_bishop, 2, 7))
+		pieces.append(Piece(C.WHITE, C.QUEEN, white_queen, 3, 7))
+		pieces.append(Piece(C.WHITE, C.KING, white_king, 4, 7))
+		pieces.append(Piece(C.WHITE, C.BISHOP, white_bishop, 5, 7))
+		pieces.append(Piece(C.WHITE, C.KNIGHT, white_knight, 6, 7))
+		pieces.append(Piece(C.WHITE, C.ROOK, white_rook, 7, 7))
 
 		for piece in pieces:
 			self.board[piece.x][piece.y] = piece
