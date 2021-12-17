@@ -5,10 +5,12 @@ from chess_utils import Utils
 from move import Move
 
 class Player:
+	king = None
 	color = -1
 
-	def __init__(self, color):
+	def __init__(self, color, king):
 		self.color = color
+		self.king = king
 
 class HumanPlayer(Player):
 
@@ -32,7 +34,7 @@ class HumanPlayer(Player):
 									offset_y = moving_piece_coord[1]*C.SQUARE_SIZE - mouse_y
 									x = moving_piece_coord[0]*C.SQUARE_SIZE
 									y = moving_piece_coord[1]*C.SQUARE_SIZE
-									possible_moves = Utils.piece_moves(board, moving_piece)
+									possible_moves = Utils.piece_moves(board, moving_piece, self.king)
 
 				elif event.type == pygame.MOUSEBUTTONUP:
 					if event.button == C.LEFT_CLICK:
@@ -43,7 +45,8 @@ class HumanPlayer(Player):
 								move = Move(moving_piece, new_coordinates[0], new_coordinates[1])
 								return move
 							else:
-								continue
+								board[moving_piece.x][moving_piece.y] = moving_piece
+								return self.make_move(screen, board)
 
 				elif event.type == pygame.MOUSEMOTION:
 					if dragging:

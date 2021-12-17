@@ -1,5 +1,6 @@
 import pygame
 import math
+import copy
 from constants import Constants as C
 from piece import Piece
 from move import Move
@@ -43,52 +44,68 @@ class Utils:
 					board[i][j].draw(screen)
 
 	@staticmethod
-	def all_legal_moves(board, color):
+	def opposing_color(color):
+		if color == C.WHITE:
+			return C.BLACK
+		else:
+			return C.WHITE
+
+	@staticmethod
+	def all_legal_moves(board, color, king, attack):
 		moves = []
 		for row in board:
 			for piece in row:
 				if piece:
-					pass
-
-	@staticmethod
-	def legal_moves(board, piece):
-		x = piece.x
-		y = piece.y
-		color = piece.color
-
-		moves = []
-
-		if piece.kind == C.PAWN:
-			moves.extend(Utils.pawn_moves(board, piece))
-		elif piece.kind == C.KNIGHT:
-			moves.extend(Utils.bishop_moves(board, piece))
-		elif piece.kind == C.BISHOP:
-			moves.extend(Utils.bishop_moves(board, piece))
-		elif piece.kind == C.ROOK:
-			moves.extend(Utils.rook_moves(board, piece))
-		elif piece.kind == C.QUEEN:
-			moves.extend(Utils.bishop_moves(board, piece))
-			moves.extend(Utils.rook_moves(board, piece))
-		elif piece.kind == C.KING:
-			moves.extend(Utils.king_moves(board, piece))
-
+					if piece.color == color:
+						moves.extend(Utils.piece_moves(board, piece, king, attack = True))
 		return moves
 
 	@staticmethod
-	def piece_moves(board, piece):
+	def move_result(move, board):
+		new_board = [row[:] for row in board]
+		new_board[move.piece.x][move.piece.y] = None
+		new_board[move.x][move.y] = move.piece
+		return new_board
+
+	@staticmethod
+	def is_attacked(board, piece):
+		attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), king = piece, attack = True)
+		for move in attacked_squares:
+			if move.x == piece.x and move.y == piece.y:
+				return True
+		return False
+
+	@staticmethod
+	def piece_moves(board, piece, king, attack = False):
+		potential_moves = []
+		moves = []
 
 		if piece.kind == C.PAWN:
-			return Utils.pawn_moves(board, piece)
-		elif piece.kind == C.BISHOP:
-			return Utils.bishop_moves(board, piece)
+			potential_moves += Utils.pawn_moves(board, piece, attack = attack)
 		elif piece.kind == C.KNIGHT:
-			return Utils.knight_moves(board, piece)
+			potential_moves += Utils.knight_moves(board, piece, attack = attack)
+		elif piece.kind == C.BISHOP:
+			potential_moves += Utils.bishop_moves(board, piece, attack = attack)
 		elif piece.kind == C.ROOK:
-			return Utils.rook_moves(board, piece)
+			potential_moves += Utils.rook_moves(board, piece, attack = attack)
 		elif piece.kind == C.QUEEN:
-			return Utils.rook_moves(board, piece) + Utils.bishop_moves(board, piece)
+			potential_moves += Utils.bishop_moves(board, piece, attack = attack)
+			potential_moves += Utils.rook_moves(board, piece, attack = attack)
 		elif piece.kind == C.KING:
-			return Utils.king_moves(board, piece)
+			return Utils.king_moves(board, piece, attack = attack)
+
+		if not attack:
+			for move in potential_moves:
+				new_board = Utils.move_result(move, board)
+				if Utils.is_attacked(new_board, king):
+					pass
+				else:
+					moves.append(move)
+		else:
+			moves = potential_moves
+
+		return moves
+
 
 	@staticmethod
 	def pawn_moves(board, piece, attack = False):
@@ -188,6 +205,14 @@ class Utils:
 					valid_moves.append(move)
 			else:
 				valid_moves.append(move)
+				
+		if not attack:
+			attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), king = piece, attack = True)
+
+			for move in valid_moves:
+				for square in attacked_squares:
+					if move.x == square.x and move.y == square.y:
+						valid_moves.remove(move)
 
 		return valid_moves
 

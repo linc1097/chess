@@ -9,11 +9,6 @@ class Game:
 
 	board = [[None]*8 for _ in range(8)]
 
-	def pixel_to_board_coord(self, pixel_x, pixel_y):
-		board_x = pixel_x/C.SQUARE_SIZE
-		board_y = pixel_y/C.SQUARE_SIZE
-		return (int(math.floor(board_x)),int(math.floor(board_y)))
-
 	def move(self, move):
 		if move.en_passant:
 			if move.piece.color == C.WHITE:
@@ -28,6 +23,7 @@ class Game:
 		return False
 
 	def play(self):
+		white_king, black_king = game2.setup_game()
 		pygame.init()
 		screen = pygame.display.set_mode((C.BOARD_SIZE, C.BOARD_SIZE))
 		pygame.display.set_caption('CHESS')
@@ -38,8 +34,8 @@ class Game:
 		running = True
 		x = 0
 		y = 0
-		white = HumanPlayer(color = C.WHITE)
-		black = HumanPlayer(color = C.BLACK)
+		white = HumanPlayer(color = C.WHITE, king = white_king)
+		black = HumanPlayer(color = C.BLACK, king = black_king)
 		while running:
 			Utils.draw_board(screen)
 			Utils.draw_pieces(screen, self.board)
@@ -97,7 +93,8 @@ class Game:
 		pieces.append(Piece(C.BLACK, C.KNIGHT, black_knight, 1, 0))
 		pieces.append(Piece(C.BLACK, C.BISHOP, black_bishop, 2, 0))
 		pieces.append(Piece(C.BLACK, C.QUEEN, black_queen, 3, 0))
-		pieces.append(Piece(C.BLACK, C.KING, black_king, 4, 0))
+		black_king_piece = Piece(C.BLACK, C.KING, black_king, 4, 0)
+		pieces.append(black_king_piece)
 		pieces.append(Piece(C.BLACK, C.BISHOP, black_bishop, 5, 0))
 		pieces.append(Piece(C.BLACK, C.KNIGHT, black_knight, 6, 0))
 		pieces.append(Piece(C.BLACK, C.ROOK, black_rook, 7, 0))
@@ -106,13 +103,15 @@ class Game:
 		pieces.append(Piece(C.WHITE, C.KNIGHT, white_knight, 1, 7))
 		pieces.append(Piece(C.WHITE, C.BISHOP, white_bishop, 2, 7))
 		pieces.append(Piece(C.WHITE, C.QUEEN, white_queen, 3, 7))
-		pieces.append(Piece(C.WHITE, C.KING, white_king, 4, 7))
+		white_king_piece = Piece(C.WHITE, C.KING, white_king, 4, 7)
+		pieces.append(white_king_piece)
 		pieces.append(Piece(C.WHITE, C.BISHOP, white_bishop, 5, 7))
 		pieces.append(Piece(C.WHITE, C.KNIGHT, white_knight, 6, 7))
 		pieces.append(Piece(C.WHITE, C.ROOK, white_rook, 7, 7))
 
 		for piece in pieces:
 			self.board[piece.x][piece.y] = piece
+		return (white_king_piece, black_king_piece)
 	
 	def print_board(self):
 		for row in self.board[::-1]:
@@ -122,8 +121,6 @@ class Game:
 
 
 game2 = Game()
-game2.setup_game()
-game2.print_board()
 game2.play()
 
 
