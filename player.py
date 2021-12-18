@@ -2,6 +2,7 @@ import pygame
 from piece import Piece
 from constants import Constants as C
 from chess_utils import Utils
+import random
 from move import Move
 
 class Player:
@@ -12,9 +13,18 @@ class Player:
 		self.color = color
 		self.king = king
 
+	def make_move(self, board, screen = None):
+		pass
+
+class RandomPlayer(Player):
+
+	def make_move(self, board, screen = None):
+		possible_moves = Utils.all_legal_moves(board, self.color, self.king)
+		return random.choice(possible_moves)
+
 class HumanPlayer(Player):
 
-	def make_move(self, screen, board):
+	def make_move(self, board, screen = None):
 		running = True
 		dragging = False
 		moves = []
@@ -51,7 +61,7 @@ class HumanPlayer(Player):
 								return move
 							else:
 								board[moving_piece.x][moving_piece.y] = moving_piece
-								return self.make_move(screen, board)
+								return self.make_move(board, screen = screen)
 
 				elif event.type == pygame.MOUSEMOTION:
 					if dragging:

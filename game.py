@@ -1,9 +1,10 @@
 import pygame
+import time
 from piece import Piece
 from constants import Constants as C
 from chess_utils import Utils
 from move import Move
-from player import Player, HumanPlayer
+from player import Player, HumanPlayer, RandomPlayer
 
 class Game:
 
@@ -32,6 +33,7 @@ class Game:
 		if move.promote:
 			move.piece.promote(move.promote)
 
+		self.board[move.piece.x][move.piece.y] = None
 		self.board[move.x][move.y] = move.piece
 		return move.piece.move(move)
 
@@ -77,21 +79,22 @@ class Game:
 		x = 0
 		y = 0
 		white = HumanPlayer(color = C.WHITE, king = white_king)
-		black = HumanPlayer(color = C.BLACK, king = black_king)
+		black = RandomPlayer(color = C.BLACK, king = black_king)
 		en_passant = None
 		made_progress = [False, False]
 		while running:
+			pygame.event.get()
 			Utils.draw_board(screen)
 			Utils.draw_pieces(screen, self.board)
 			pygame.display.update()
 
-			if self.game_over(white_king, positions, made_progress):
-				print("GAMEOVER")
+			game_result = self.game_over(white_king, positions, made_progress)
+			if game_result:
+				print(C.RESULT[game_result])
 				break
 
-			move = white.make_move(screen, self.board)
+			move = white.make_move(self.board, screen = screen)
 			made_progress[0] = self.makes_progress(move)
-
 			if en_passant:
 				en_passant.en_passant = False
 			en_passant = self.move(move)
@@ -100,11 +103,12 @@ class Game:
 			Utils.draw_pieces(screen, self.board)
 			pygame.display.update()
 
-			if self.game_over(black_king, positions, made_progress):
-				print("GAMEOVER")
+			game_result = self.game_over(black_king, positions, made_progress)
+			if game_result:
+				print(C.RESULT[game_result])
 				break
 
-			move = black.make_move(screen, self.board)
+			move = black.make_move(self.board, screen = screen)
 			made_progress[1] = self.makes_progress(move)
 
 

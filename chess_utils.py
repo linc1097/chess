@@ -51,7 +51,7 @@ class Utils:
 			return C.WHITE
 
 	@staticmethod
-	def all_legal_moves(board, color, king, attack):
+	def all_legal_moves(board, color, king, attack = False):
 		moves = []
 		for row in board:
 			for piece in row:
