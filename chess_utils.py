@@ -279,7 +279,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x+i, y+i))
-					break
+					if board[x+i][y+i].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x+i, y+i))
 
@@ -293,7 +294,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x-i, y+i))
-					break
+					if board[x-i][y+i].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x-i, y+i))
 
@@ -307,7 +309,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x+i, y-i))
-					break
+					if board[x+i][y-i].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x+i, y-i))
 
@@ -321,7 +324,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x-i, y-i))
-					break
+					if board[x-i][y-i].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x-i, y-i))
 
@@ -344,7 +348,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x+i, y))
-					break
+					if board[x+i][y].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x+i, y))
 
@@ -358,7 +363,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x-i, y))
-					break
+					if board[x-i][y].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x-i, y))
 
@@ -372,7 +378,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x, y+i))
-					break
+					if board[x][y+i].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x, y+i))
 
@@ -386,7 +393,8 @@ class Utils:
 					break
 				else:
 					moves.append(Move(piece, x, y-i))
-					break
+					if board[x][y-i].kind != C.KING:
+						break
 			else:
 				moves.append(Move(piece, x, y-i))
 
