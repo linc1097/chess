@@ -51,8 +51,10 @@ class Piece:
 		if self.kind == C.PAWN:
 			if abs(self.y - move.y) > 1:
 				self.en_passant = True
-			elif self.en_passant:
-				self.en_passant = False
+				self.x = move.x
+				self.y = move.y
+				return self
 		self.x = move.x
 		self.y = move.y
+		return None
 

@@ -12,12 +12,24 @@ class Game:
 	def move(self, move):
 		if move.en_passant:
 			if move.piece.color == C.WHITE:
-				pass
+				self.board[move.x][move.y+1] = None
 			else:
-				pass
-		else:
-			move.piece.move(move)
-			self.board[move.x][move.y] = move.piece
+				self.board[move.x][move.y-1] = None
+
+		if move.castle:
+			if move.castle == C.KINGS_SIDE:
+				self.board[5][move.y] = self.board[7][move.y]
+				self.board[5][move.y].x = 5
+				self.board[5][move.y].y = move.y
+				self.board[7][move.y] = None
+			else:
+				self.board[3][move.y] = self.board[0][move.y]
+				self.board[3][move.y].x = 3
+				self.board[3][move.y].y = move.y
+				self.board[0][move.y] = None
+
+		self.board[move.x][move.y] = move.piece
+		return move.piece.move(move)
 
 	def game_over(self):
 		return False
@@ -36,13 +48,16 @@ class Game:
 		y = 0
 		white = HumanPlayer(color = C.WHITE, king = white_king)
 		black = HumanPlayer(color = C.BLACK, king = black_king)
+		en_passant = None
 		while running:
 			Utils.draw_board(screen)
 			Utils.draw_pieces(screen, self.board)
 			pygame.display.update()
 
 			move = white.make_move(screen, self.board)
-			self.move(move)
+			if en_passant:
+				en_passant.en_passant = False
+			en_passant = self.move(move)
 
 			Utils.draw_board(screen)
 			Utils.draw_pieces(screen, self.board)
@@ -52,7 +67,9 @@ class Game:
 				break
 
 			move = black.make_move(screen, self.board)
-			self.move(move)
+			if en_passant:
+				en_passant.en_passant = False
+			en_passant = self.move(move)
 
 			if self.game_over():
 				break

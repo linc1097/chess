@@ -9,6 +9,9 @@ class Constants:
 	WHITE = 1
 	BLACK = 0
 
+	KINGS_SIDE = 1
+	QUEENS_SIDE = 2
+
 	LEFT_CLICK = 1
 
 	BOARD_SIZE = 600

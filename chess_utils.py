@@ -11,8 +11,8 @@ class Utils:
 	def contains_same_coordinates(moves, x, y):
 		for move in moves:
 			if move.x == x and move.y == y:
-				return True
-		return False
+				return move
+		return None
 
 	@staticmethod
 	def pixel_to_board_coord(pixel_x, pixel_y):
@@ -127,7 +127,7 @@ class Utils:
 								moves.append(Move(piece, x, y-1, promote = i))
 						else:
 							moves.append(Move(piece, x, y-1))
-			if x+1 < 7:				
+			if x+1 < 7:
 				if board[x+1][y-1] and board[x+1][y-1].color != color:
 					if y-1 == 0:
 						for i in range(2, 6, 1):
@@ -205,14 +205,27 @@ class Utils:
 					valid_moves.append(move)
 			else:
 				valid_moves.append(move)
-				
+
 		if not attack:
 			attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), king = piece, attack = True)
 
 			for move in valid_moves:
-				for square in attacked_squares:
-					if move.x == square.x and move.y == square.y:
-						valid_moves.remove(move)
+				if Utils.contains_same_coordinates(attacked_squares, move.x, move.y):
+					valid_moves.remove(move)
+
+			if not piece.moved:
+				if board[7][piece.y] and not board[7][piece.y].moved:
+					if not board[piece.x+1][piece.y] and not board[piece.x+2][piece.y]:
+						if (not Utils.contains_same_coordinates(attacked_squares, piece.x, piece.y) # could improve performance
+							and not Utils.contains_same_coordinates(attacked_squares, piece.x+1, piece.y) 
+							and not Utils.contains_same_coordinates(attacked_squares, piece.x+2, piece.y)):
+							valid_moves.append(Move(piece, piece.x+2, piece.y, castle = C.KINGS_SIDE))
+				if board[0][piece.y] and not board[0][piece.y].moved:
+					if not board[piece.x-1][piece.y] and not board[piece.x-2][piece.y] and not board[piece.x-2][piece.y]:
+						if (not Utils.contains_same_coordinates(attacked_squares, piece.x, piece.y) 
+							and not Utils.contains_same_coordinates(attacked_squares, piece.x-1, piece.y) 
+							and not Utils.contains_same_coordinates(attacked_squares, piece.x-2, piece.y)):
+							valid_moves.append(Move(piece, piece.x-2, piece.y, castle = C.QUEENS_SIDE))
 
 		return valid_moves
 

@@ -41,8 +41,8 @@ class HumanPlayer(Player):
 						if dragging:
 							mouse_x, mouse_y = event.pos
 							new_coordinates = Utils.pixel_to_board_coord(mouse_x, mouse_y)
-							if Utils.contains_same_coordinates(possible_moves, new_coordinates[0], new_coordinates[1]):
-								move = Move(moving_piece, new_coordinates[0], new_coordinates[1])
+							move = Utils.contains_same_coordinates(possible_moves, new_coordinates[0], new_coordinates[1])
+							if move:
 								return move
 							else:
 								board[moving_piece.x][moving_piece.y] = moving_piece
