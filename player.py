@@ -43,6 +43,11 @@ class HumanPlayer(Player):
 							new_coordinates = Utils.pixel_to_board_coord(mouse_x, mouse_y)
 							move = Utils.contains_same_coordinates(possible_moves, new_coordinates[0], new_coordinates[1])
 							if move:
+								if move.promote:
+									promote_type = input()
+									while promote_type not in C.TEXT_TO_PIECE.keys():
+										promote_type = input()
+									move.promote = C.TEXT_TO_PIECE[promote_type]
 								return move
 							else:
 								board[moving_piece.x][moving_piece.y] = moving_piece

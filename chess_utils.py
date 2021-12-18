@@ -57,7 +57,7 @@ class Utils:
 			for piece in row:
 				if piece:
 					if piece.color == color:
-						moves.extend(Utils.piece_moves(board, piece, king, attack = True))
+						moves.extend(Utils.piece_moves(board, piece, king, attack = attack))
 		return moves
 
 	@staticmethod
@@ -70,10 +70,7 @@ class Utils:
 	@staticmethod
 	def is_attacked(board, piece):
 		attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), king = piece, attack = True)
-		for move in attacked_squares:
-			if move.x == piece.x and move.y == piece.y:
-				return True
-		return False
+		return Utils.contains_same_coordinates(attacked_squares, piece.x, piece.y)
 
 	@staticmethod
 	def piece_moves(board, piece, king, attack = False):
@@ -97,9 +94,7 @@ class Utils:
 		if not attack:
 			for move in potential_moves:
 				new_board = Utils.move_result(move, board)
-				if Utils.is_attacked(new_board, king):
-					pass
-				else:
+				if not Utils.is_attacked(new_board, king):
 					moves.append(move)
 		else:
 			moves = potential_moves
@@ -120,6 +115,8 @@ class Utils:
 					if not board[x][y-1] and not board[x][y-2]:
 						moves.append(Move(piece, x, y-2))
 						moves.append(Move(piece, x, y-1))
+					elif not board[x][y-1]:
+						moves.append(Move(piece, x, y-1))
 				else:
 					if not board[x][y-1]:
 						if y-1 == 0:
@@ -127,7 +124,7 @@ class Utils:
 								moves.append(Move(piece, x, y-1, promote = i))
 						else:
 							moves.append(Move(piece, x, y-1))
-			if x+1 < 7:
+			if x+1 <= 7:
 				if board[x+1][y-1] and board[x+1][y-1].color != color:
 					if y-1 == 0:
 						for i in range(2, 6, 1):
@@ -137,7 +134,9 @@ class Utils:
 				elif board[x+1][y] and board[x+1][y].color != color:
 					if board[x+1][y].en_passant:
 						moves.append(Move(piece, x+1, y-1, en_passant = True))
-			if x-1 > 0:
+				elif attack:
+					moves.append(Move(piece, x+1, y-1))
+			if x-1 >= 0:
 				if board[x-1][y-1] and board[x-1][y-1].color != color:
 					if y-1 == 0:
 						for i in range(2, 6, 1):
@@ -147,11 +146,15 @@ class Utils:
 				elif board[x-1][y] and board[x-1][y].color != color:
 					if board[x-1][y].en_passant:
 						moves.append(Move(piece, x-1, y-1, en_passant = True))
+				elif attack:
+					moves.append(Move(piece, x-1, y-1))
 		else: #if color == black:
 			if not attack:
 				if not piece.moved:
 					if not board[x][y+1] and not board[x][y+2]:
 						moves.append(Move(piece, x, y+2))
+						moves.append(Move(piece, x, y+1))
+					elif not board[x][y+1]:
 						moves.append(Move(piece, x, y+1))
 				else:
 					if not board[x][y+1]:
@@ -160,7 +163,7 @@ class Utils:
 								moves.append(Move(piece, x, y+1, promote = i))
 						else:
 							moves.append(Move(piece, x, y+1))
-			if x+1 < 7:
+			if x+1 <= 7:
 				if board[x+1][y+1] and board[x+1][y+1].color != color:
 					if y+1 == 7:
 						for i in range(2, 6, 1):
@@ -170,7 +173,9 @@ class Utils:
 				elif board[x+1][y] and board[x+1][y].color != color:
 					if board[x+1][y].en_passant:
 						moves.append(Move(piece, x+1, y+1, en_passant = True))
-			if x-1 > 0:
+				elif attack:
+					moves.append(Move(piece, x+1, y+1))
+			if x-1 >= 0:
 				if board[x-1][y+1] and board[x-1][y+1].color != color:
 					if y+1 == 7:
 						for i in range(2, 6, 1):
@@ -180,6 +185,8 @@ class Utils:
 				elif board[x-1][y] and board[x-1][y].color != color:
 					if board[x-1][y].en_passant:
 						moves.append(Move(piece, x-1, y+1, en_passant = True))
+				elif attack:
+					moves.append(Move(piece, x-1, y+1))
 
 		return moves
 
@@ -209,9 +216,11 @@ class Utils:
 		if not attack:
 			attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), king = piece, attack = True)
 
+			moves = []
 			for move in valid_moves:
-				if Utils.contains_same_coordinates(attacked_squares, move.x, move.y):
-					valid_moves.remove(move)
+				if not Utils.contains_same_coordinates(attacked_squares, move.x, move.y):
+					moves.append(move)
+			valid_moves = moves
 
 			if not piece.moved:
 				if board[7][piece.y] and not board[7][piece.y].moved:
@@ -226,7 +235,6 @@ class Utils:
 							and not Utils.contains_same_coordinates(attacked_squares, piece.x-1, piece.y) 
 							and not Utils.contains_same_coordinates(attacked_squares, piece.x-2, piece.y)):
 							valid_moves.append(Move(piece, piece.x-2, piece.y, castle = C.QUEENS_SIDE))
-
 		return valid_moves
 
 	@staticmethod

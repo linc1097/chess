@@ -58,3 +58,9 @@ class Piece:
 		self.y = move.y
 		return None
 
+	def promote(self, promote):
+		if promote:
+			self.kind = promote
+			self.image = C.PIECE_TO_IMAGE[self.color][promote]
+
+
