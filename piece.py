@@ -4,17 +4,15 @@ class Piece:
 	image = None
 	color = -1
 	kind = 0
-	x = 0
-	y = 0
+	position = 0
 	moved = False
 	en_passant = False
 
-	def __init__(self, color, kind, image, x, y):
+	def __init__(self, color, kind, image, position):
 		self.color = color
 		self.kind = kind
 		self.image = image
-		self.x = x
-		self.y = y
+		self.position = position
 
 	def __str__(self):
 		if self.color == C.WHITE:
@@ -35,27 +33,30 @@ class Piece:
 		elif self.kind == C.KING:
 			string += 'K'
 
-		string += str(self.x) + str(self.y)
+		string += str(self.position%8) + str(self.position//8)
 		return string
 
-	def draw(self, screen, x = None, y = None):
-		if not x and not y:
-			x = self.x*C.SQUARE_SIZE
-			y = self.y*C.SQUARE_SIZE
+	def draw(self, screen, position = None):
+		if not position:
+			position = self.position
+		
+		x = (self.position%8)*C.SQUARE_SIZE
+		y = (self.position//8)*C.SQUARE_SIZE
 
+		screen.blit(self.image, (x, y))
+
+	def draw_at(self, screen, x, y):
 		screen.blit(self.image, (x, y))
 
 	def move(self, move):
 		if not self.moved:
 			self.moved = True
 		if self.kind == C.PAWN:
-			if abs(self.y - move.y) > 1:
+			if abs(self.position - move.position) > 9:
 				self.en_passant = True
-				self.x = move.x
-				self.y = move.y
+				self.position = move.position
 				return self
-		self.x = move.x
-		self.y = move.y
+		self.position = move.position
 		return None
 
 	def promote(self, promote):

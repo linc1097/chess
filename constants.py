@@ -29,6 +29,8 @@ class Constants:
 	WHITE_WIN = 2
 	DRAW = 3
 
+	PIECE_VALUE = {PAWN: 1, BISHOP: 3, KNIGHT: 3, ROOK: 5, QUEEN: 9, KING: 0}
+
 	RESULT = {1: "Black Wins!", 2: "White Wins!", 3: "Draw"}
 
 	TEXT_TO_PIECE = {"pawn": 1, "bishop": 2,

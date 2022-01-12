@@ -8,9 +8,23 @@ from move import Move
 class Utils:
 
 	@staticmethod
-	def contains_same_coordinates(moves, x, y):
+	def print_board(board):
+		i = 0
+		for piece in board:
+			if i%8 == 0:
+				print('')
+			if piece:
+				print(piece, end='')
+			else: 
+				print('0000', end='')
+			i += 1
+		print('')
+
+
+	@staticmethod
+	def contains_same_coordinates(moves, position):
 		for move in moves:
-			if move.x == x and move.y == y:
+			if move.position == position:
 				return move
 		return None
 
@@ -18,12 +32,12 @@ class Utils:
 	def pixel_to_board_coord(pixel_x, pixel_y):
 		board_x = pixel_x/C.SQUARE_SIZE
 		board_y = pixel_y/C.SQUARE_SIZE
-		return (int(math.floor(board_x)),int(math.floor(board_y)))
+		return math.floor(board_y)*8 + math.floor(board_x)
 
 	@staticmethod
 	def highlight_moves(screen, moves):
 		for move in moves:
-			rect = pygame.Rect(C.SQUARE_SIZE*move.x, C.SQUARE_SIZE*move.y, C.SQUARE_SIZE, C.SQUARE_SIZE)
+			rect = pygame.Rect(C.SQUARE_SIZE*(move.position%8), C.SQUARE_SIZE*(move.position//8), C.SQUARE_SIZE, C.SQUARE_SIZE)
 			pygame.draw.rect(screen, C.BLACK, rect)
 
 	@staticmethod
@@ -38,10 +52,9 @@ class Utils:
 
 	@staticmethod
 	def draw_pieces(screen, board):
-		for i in range(8):
-			for j in range(8):
-				if board[i][j]:
-					board[i][j].draw(screen)
+		for i in range(64):
+				if board[i]:
+					board[i].draw(screen)
 
 	@staticmethod
 	def opposing_color(color):
@@ -51,29 +64,40 @@ class Utils:
 			return C.WHITE
 
 	@staticmethod
-	def all_legal_moves(board, color, king, attack = False):
+	def all_legal_moves(board, color, attack = False, check = False):
 		moves = []
-		for row in board:
-			for piece in row:
-				if piece:
-					if piece.color == color:
-						moves.extend(Utils.piece_moves(board, piece, king, attack = attack))
+		for piece in board:
+			if piece:
+				if piece.color == color:
+					moves.extend(Utils.piece_moves(board, piece, attack = attack))
+
 		return moves
 
 	@staticmethod
 	def move_result(move, board):
-		new_board = [row[:] for row in board]
-		new_board[move.piece.x][move.piece.y] = None
-		new_board[move.x][move.y] = move.piece
+		new_board = board[:]
+		new_board[move.piece.position] = None
+		new_board[move.position] = move.piece
 		return new_board
 
 	@staticmethod
 	def is_attacked(board, piece):
-		attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), king = piece, attack = True)
-		return Utils.contains_same_coordinates(attacked_squares, piece.x, piece.y)
+		attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), attack = True)
+		return Utils.contains_same_coordinates(attacked_squares, piece.position)
 
 	@staticmethod
-	def piece_moves(board, piece, king, attack = False):
+	def is_king_attacked(board, color):
+		attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(color), attack = True)
+		for move in attacked_squares:
+			piece = board[move.position]
+			if piece:
+				if piece.kind == C.KING and piece.color == color:
+					return True
+		return False
+
+
+	@staticmethod
+	def piece_moves(board, piece, attack = False):
 		potential_moves = []
 		moves = []
 
@@ -94,7 +118,7 @@ class Utils:
 		if not attack:
 			for move in potential_moves:
 				new_board = Utils.move_result(move, board)
-				if not Utils.is_attacked(new_board, king):
+				if not Utils.is_king_attacked(new_board, piece.color):
 					moves.append(move)
 		else:
 			moves = potential_moves
@@ -104,299 +128,335 @@ class Utils:
 
 	@staticmethod
 	def pawn_moves(board, piece, attack = False):
-		x = piece.x
-		y = piece.y
+		position = piece.position
+		x = position%8
+		y = position//8
 		color = piece.color
 
 		moves = []
 		if color == C.WHITE:
 			if not attack:
 				if not piece.moved:
-					if not board[x][y-1] and not board[x][y-2]:
-						moves.append(Move(piece, x, y-2))
-						moves.append(Move(piece, x, y-1))
-					elif not board[x][y-1]:
-						moves.append(Move(piece, x, y-1))
+					if position-8 >= 0 and not board[position-8]:
+						moves.append(Move(piece, position-8))
+						if position-16 >= 0 and not  board[position-16]:
+							moves.append(Move(piece, position-16))
 				else:
-					if not board[x][y-1]:
+					if not board[position-8]:
 						if y-1 == 0:
 							for i in range(2, 6, 1):
-								moves.append(Move(piece, x, y-1, promote = i))
+								moves.append(Move(piece, position-8, promote = i))
 						else:
-							moves.append(Move(piece, x, y-1))
+							moves.append(Move(piece, position-8))
 			if x+1 <= 7:
-				if board[x+1][y-1] and board[x+1][y-1].color != color:
+				if board[position-7] and board[position-7].color != color:
 					if y-1 == 0:
 						for i in range(2, 6, 1):
-							moves.append(Move(piece, x+1, y-1, promote = i))
+							moves.append(Move(piece, position-7, promote = i))
 					else:
-						moves.append(Move(piece, x+1, y-1))
-				elif board[x+1][y] and board[x+1][y].color != color:
-					if board[x+1][y].en_passant:
-						moves.append(Move(piece, x+1, y-1, en_passant = True))
+						moves.append(Move(piece, position-7))
+				elif board[position+1] and board[position+1].color != color:
+					if board[position+1].en_passant:
+						moves.append(Move(piece, position-7, en_passant = True))
 				elif attack:
-					moves.append(Move(piece, x+1, y-1))
+					moves.append(Move(piece, position-7))
 			if x-1 >= 0:
-				if board[x-1][y-1] and board[x-1][y-1].color != color:
+				if board[position-9] and board[position-9].color != color:
 					if y-1 == 0:
 						for i in range(2, 6, 1):
-							moves.append(Move(piece, x-1, y-1, promote = i))
+							moves.append(Move(piece, position-9, promote = i))
 					else:
-						moves.append(Move(piece, x-1, y-1))
-				elif board[x-1][y] and board[x-1][y].color != color:
-					if board[x-1][y].en_passant:
-						moves.append(Move(piece, x-1, y-1, en_passant = True))
+						moves.append(Move(piece, position-9))
+				elif board[position-1] and board[position-1].color != color:
+					if board[position-1].en_passant:
+						moves.append(Move(piece, position-9, en_passant = True))
 				elif attack:
-					moves.append(Move(piece, x-1, y-1))
+					moves.append(Move(piece, position-9))
 		else: #if color == black:
 			if not attack:
 				if not piece.moved:
-					if not board[x][y+1] and not board[x][y+2]:
-						moves.append(Move(piece, x, y+2))
-						moves.append(Move(piece, x, y+1))
-					elif not board[x][y+1]:
-						moves.append(Move(piece, x, y+1))
+					if position+8 < 64 and not board[position+8]:
+						moves.append(Move(piece, position+8))
+						if position+16 < 64 and not  board[position+16]:
+							moves.append(Move(piece, position+16))
 				else:
-					if not board[x][y+1]:
+					if not board[position+8]:
 						if y+1 == 7:
 							for i in range(2, 6, 1):
-								moves.append(Move(piece, x, y+1, promote = i))
+								moves.append(Move(piece, position+8, promote = i))
 						else:
-							moves.append(Move(piece, x, y+1))
+							moves.append(Move(piece, position+8))
 			if x+1 <= 7:
-				if board[x+1][y+1] and board[x+1][y+1].color != color:
+				if board[position+9] and board[position+9].color != color:
 					if y+1 == 7:
 						for i in range(2, 6, 1):
-							moves.append(Move(piece, x+1, y+1, promote = i))
+							moves.append(Move(piece, position+9, promote = i))
 					else:
-						moves.append(Move(piece, x+1, y+1))
-				elif board[x+1][y] and board[x+1][y].color != color:
-					if board[x+1][y].en_passant:
-						moves.append(Move(piece, x+1, y+1, en_passant = True))
+						moves.append(Move(piece, position+9))
+				elif board[position+1] and board[position+1].color != color:
+					if board[position+1].en_passant:
+						moves.append(Move(piece, position+9, en_passant = True))
 				elif attack:
-					moves.append(Move(piece, x+1, y+1))
+					moves.append(Move(piece, position+9))
 			if x-1 >= 0:
-				if board[x-1][y+1] and board[x-1][y+1].color != color:
+				if board[position+7] and board[position+7].color != color:
 					if y+1 == 7:
 						for i in range(2, 6, 1):
-							moves.append(Move(piece, x-1, y+1, promote = i))
+							moves.append(Move(piece, position+7, promote = i))
 					else:
-						moves.append(Move(piece, x-1, y+1))
-				elif board[x-1][y] and board[x-1][y].color != color:
-					if board[x-1][y].en_passant:
-						moves.append(Move(piece, x-1, y+1, en_passant = True))
+						moves.append(Move(piece, position+7))
+				elif board[position-1] and board[position-1].color != color:
+					if board[position-1].en_passant:
+						moves.append(Move(piece, position+7, en_passant = True))
 				elif attack:
-					moves.append(Move(piece, x-1, y+1))
+					moves.append(Move(piece, position+7))
 
 		return moves
 
 	@staticmethod
 	def king_moves(board, piece, attack = False):
-		x = piece.x
-		y = piece.y
+		position = piece.position
 		color = piece.color
+		right = position%8 == 7
+		left = position%8 == 0
+		top = position//8 == 7
+		bottom = position//8 == 0
 
-		moves = [Move(piece, x+1, y+1), Move(piece, x+1, y-1), Move(piece, x-1, y+1), Move(piece, x-1, y-1),
-				 Move(piece, x+1, y), Move(piece, x-1, y), Move(piece, x, y+1), Move(piece, x, y-1)]
+
+		if left:
+			if bottom:
+				moves = [position+1, position+8, position+9]
+			elif top:
+				moves = [position+1, position-8, position-7]
+			else:
+				moves = [position+1, position-7, position+8, position-8, position+9]
+		elif right:
+			if bottom:
+				moves = [position-1, position+8, position+7]
+			elif top:
+				moves = [position-1, position-8, position-9]
+			else:
+				moves = [position-1, position-9, position+8, position-8, position+7]
+		elif top:
+			moves = [position-1, position+1, position-7, position-8, position-9]
+		elif bottom:
+			moves = [position-1, position+1, position+7, position+8, position+9]
+		else:
+			moves = [position+1, position-1, position+7, position-7, position+8, position-8, position+9, position-9]
 
 		valid_moves = []
 
 		for move in moves:
-			if move.x > 7 or move.x < 0 or move.y > 7 or move.y < 0:
-				continue
-			elif board[move.x][move.y]:
-				if board[move.x][move.y].color == color:
+			if board[move]:
+				if board[move].color == color:
 					if attack:
-						valid_moves.append(move)
+						valid_moves.append(Move(piece, move))
 				else:
-					valid_moves.append(move)
+					valid_moves.append(Move(piece, move))
 			else:
-				valid_moves.append(move)
+				valid_moves.append(Move(piece, move))
 
 		if not attack:
-			attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), king = piece, attack = True)
+			attacked_squares = Utils.all_legal_moves(board, Utils.opposing_color(piece.color), attack = True)
 
 			moves = []
 			for move in valid_moves:
-				if not Utils.contains_same_coordinates(attacked_squares, move.x, move.y):
+				if not Utils.contains_same_coordinates(attacked_squares, move.position):
 					moves.append(move)
 			valid_moves = moves
 
 			if not piece.moved:
-				if board[7][piece.y] and not board[7][piece.y].moved:
-					if not board[piece.x+1][piece.y] and not board[piece.x+2][piece.y]:
-						if (not Utils.contains_same_coordinates(attacked_squares, piece.x, piece.y) # could improve performance
-							and not Utils.contains_same_coordinates(attacked_squares, piece.x+1, piece.y) 
-							and not Utils.contains_same_coordinates(attacked_squares, piece.x+2, piece.y)):
-							valid_moves.append(Move(piece, piece.x+2, piece.y, castle = C.KINGS_SIDE))
-				if board[0][piece.y] and not board[0][piece.y].moved:
-					if not board[piece.x-1][piece.y] and not board[piece.x-2][piece.y] and not board[piece.x-2][piece.y]:
-						if (not Utils.contains_same_coordinates(attacked_squares, piece.x, piece.y) 
-							and not Utils.contains_same_coordinates(attacked_squares, piece.x-1, piece.y) 
-							and not Utils.contains_same_coordinates(attacked_squares, piece.x-2, piece.y)):
-							valid_moves.append(Move(piece, piece.x-2, piece.y, castle = C.QUEENS_SIDE))
+				if board[position//8 + 7] and not board[position//8 + 7].moved:
+					if not board[position+1] and not board[position+2]:
+						if (not Utils.contains_same_coordinates(attacked_squares, position) # could improve performance
+							and not Utils.contains_same_coordinates(attacked_squares, position+1) 
+							and not Utils.contains_same_coordinates(attacked_squares, position+2)):
+							valid_moves.append(Move(piece, position+2, castle = C.KINGS_SIDE))
+				if board[position//8] and not board[position//8].moved:
+					if not board[position-1] and not board[position-2]:
+						if (not Utils.contains_same_coordinates(attacked_squares, position) 
+							and not Utils.contains_same_coordinates(attacked_squares, position-1) 
+							and not Utils.contains_same_coordinates(attacked_squares, position-2)):
+							valid_moves.append(Move(piece, position-2, castle = C.QUEENS_SIDE))
 		return valid_moves
 
 	@staticmethod
 	def knight_moves(board, piece, attack = False):
-		x = piece.x
-		y = piece.y
+		position = piece.position
+		x = position%8
+		y = position//8
 		color = piece.color
 
-		moves = [Move(piece, x+2, y+1), Move(piece, x+2, y-1), Move(piece, x-2, y+1), Move(piece, x-2, y-1),
-				 Move(piece, x+1, y+2), Move(piece, x-1, y+2), Move(piece, x+1, y-2), Move(piece, x-1, y-2)]
+		moves = [(x+2, y+1), (x+2, y-1), (x-2, y+1), (x-2, y-1),
+				 (x+1, y+2), (x-1, y+2), (x+1, y-2), (x-1, y-2)]
 
 		valid_moves = []
 
 		for move in moves:
-			if move.x > 7 or move.x < 0 or move.y > 7 or move.y < 0:
+			if move[0] > 7 or move[0] < 0 or move[1] > 7 or move[1] < 0:
 				continue
-			elif board[move.x][move.y]:
-				if board[move.x][move.y].color == color:
-					if attack:
-						valid_moves.append(move)
-				else:
-					valid_moves.append(move)
 			else:
-				valid_moves.append(move)
+				move_position =  8*move[1] + move[0]
+				if board[move_position]:
+					if board[move_position].color == color:
+						if attack:
+							valid_moves.append(Move(piece, move_position))
+					else:
+						valid_moves.append(Move(piece, move_position))
+				else:
+					valid_moves.append(Move(piece, move_position))
 
 		return valid_moves
 
 	@staticmethod
 	def bishop_moves(board, piece, attack = False):
-		x = piece.x
-		y = piece.y
+		position = piece.position
 		color = piece.color
 
 		moves = []
-		for i in range(1,8,1):
-			if x+i > 7 or y+i > 7:
-				break
-			elif board[x+i][y+i]:
-				if board[x+i][y+i].color == color:
-					if attack:
-						moves.append(Move(piece, x+i, y+i))
-					break
-				else:
-					moves.append(Move(piece, x+i, y+i))
-					if board[x+i][y+i].kind != C.KING:
+		if position%8 < 7 and position//8 < 7:
+			for i in range(1,8,1):
+				new_pos = position+(i*9)
+				if board[new_pos]:
+					if board[new_pos].color == color:
+						if attack:
+							moves.append(Move(piece, new_pos))
 						break
-			else:
-				moves.append(Move(piece, x+i, y+i))
-
-		for i in range(1,8,1):
-			if x-i < 0 or y+i > 7:
-				break
-			elif board[x-i][y+i]:
-				if board[x-i][y+i].color == color:
-					if attack:
-						moves.append(Move(piece, x-i, y+i))
-					break
+					else:
+						moves.append(Move(piece, new_pos))
+						if board[new_pos].kind != C.KING:
+							break
 				else:
-					moves.append(Move(piece, x-i, y+i))
-					if board[x-i][y+i].kind != C.KING:
+					moves.append(Move(piece, new_pos))
+				
+				if new_pos%8 == 7 or new_pos//8 == 7:
 						break
-			else:
-				moves.append(Move(piece, x-i, y+i))
+		if position%8 > 0 and position//8 < 7:
+			for i in range(1,8,1):
+				new_pos = position+(i*7)
 
-		for i in range(1,8,1):
-			if x+i > 7 or y-i < 0:
-				break
-			elif board[x+i][y-i]:
-				if board[x+i][y-i].color == color:
-					if attack:
-						moves.append(Move(piece, x+i, y-i))
-					break
+				if board[new_pos]:
+					if board[new_pos].color == color:
+						if attack:
+							moves.append(Move(piece, new_pos))
+						break
+					else:
+						moves.append(Move(piece, new_pos))
+						if board[new_pos].kind != C.KING:
+							break
 				else:
-					moves.append(Move(piece, x+i, y-i))
-					if board[x+i][y-i].kind != C.KING:
-						break
-			else:
-				moves.append(Move(piece, x+i, y-i))
+					moves.append(Move(piece, new_pos))
 
-		for i in range(1,8,1):
-			if x-i < 0 or y-i < 0:
-				break
-			elif board[x-i][y-i]:
-				if board[x-i][y-i].color == color:
-					if attack:
-						moves.append(Move(piece, x-i, y-i))
+				if new_pos%8 == 0 or new_pos//8 == 7:
 					break
-				else:
-					moves.append(Move(piece, x-i, y-i))
-					if board[x-i][y-i].kind != C.KING:
-						break
-			else:
-				moves.append(Move(piece, x-i, y-i))
 
+		if position%8 > 0 and position//8 > 0:
+			for i in range(1,8,1):
+				new_pos = position-(i*9)
+
+				if board[new_pos]:
+					if board[new_pos].color == color:
+						if attack:
+							moves.append(Move(piece, new_pos))
+						break
+					else:
+						moves.append(Move(piece, new_pos))
+						if board[new_pos].kind != C.KING:
+							break
+				else:
+					moves.append(Move(piece, new_pos))
+
+				if new_pos%8 == 0 or new_pos//8 == 0:
+					break
+
+		if position%8 < 7 and position//8 > 0:
+			for i in range(1,8,1):
+				new_pos = position-(i*7)
+
+				if board[new_pos]:
+					if board[new_pos].color == color:
+						if attack:
+							moves.append(Move(piece, new_pos))
+						break
+					else:
+						moves.append(Move(piece, new_pos))
+						if board[new_pos].kind != C.KING:
+							break
+				else:
+					moves.append(Move(piece, new_pos))
+
+				if new_pos%8 == 7 or new_pos//8 == 0:
+					break
 		return moves
 
 	@staticmethod
 	def rook_moves(board, piece, attack = False):
-		x = piece.x
-		y = piece.y
+		position = piece.position
 		color = piece.color
 
 		moves = []
 		for i in range(1,8,1):
-			if x+i > 7:
+			new_pos = position+i
+			if new_pos%8 == 0:
 				break
-			elif board[x+i][y]:
-				if board[x+i][y].color == color:
+			elif board[new_pos]:
+				if board[new_pos].color == color:
 					if attack:
-						moves.append(Move(piece, x+i, y))
+						moves.append(Move(piece, new_pos))
 					break
 				else:
-					moves.append(Move(piece, x+i, y))
-					if board[x+i][y].kind != C.KING:
+					moves.append(Move(piece, new_pos))
+					if board[new_pos].kind != C.KING:
 						break
 			else:
-				moves.append(Move(piece, x+i, y))
+				moves.append(Move(piece, new_pos))
 
 		for i in range(1,8,1):
-			if x-i < 0:
+			new_pos = position-i
+			if new_pos%8 == 7:
 				break
-			elif board[x-i][y]:
-				if board[x-i][y].color == color:
+			elif board[new_pos]:
+				if board[new_pos].color == color:
 					if attack:
-						moves.append(Move(piece, x-i, y))
+						moves.append(Move(piece, new_pos))
 					break
 				else:
-					moves.append(Move(piece, x-i, y))
-					if board[x-i][y].kind != C.KING:
+					moves.append(Move(piece, new_pos))
+					if board[new_pos].kind != C.KING:
 						break
 			else:
-				moves.append(Move(piece, x-i, y))
+				moves.append(Move(piece, new_pos))
 
 		for i in range(1,8,1):
-			if y+i > 7:
+			new_pos = position+(8*i)
+			if new_pos > 63:
 				break
-			elif board[x][y+i]:
-				if board[x][y+i].color == color:
+			elif board[new_pos]:
+				if board[new_pos].color == color:
 					if attack:
-						moves.append(Move(piece, x, y+i))
+						moves.append(Move(piece, new_pos))
 					break
 				else:
-					moves.append(Move(piece, x, y+i))
-					if board[x][y+i].kind != C.KING:
+					moves.append(Move(piece, new_pos))
+					if board[new_pos].kind != C.KING:
 						break
 			else:
-				moves.append(Move(piece, x, y+i))
+				moves.append(Move(piece, new_pos))
 
 		for i in range(1,8,1):
-			if y-i < 0:
+			new_pos = position-(i*8)
+			if new_pos < 0:
 				break
-			elif board[x][y-i]:
-				if board[x][y-i].color == color:
+			elif board[new_pos]:
+				if board[new_pos].color == color:
 					if attack:
-						moves.append(Move(piece, x, y-i))
+						moves.append(Move(piece, new_pos))
 					break
 				else:
-					moves.append(Move(piece, x, y-i))
-					if board[x][y-i].kind != C.KING:
+					moves.append(Move(piece, new_pos))
+					if board[new_pos].kind != C.KING:
 						break
 			else:
-				moves.append(Move(piece, x, y-i))
-
+				moves.append(Move(piece, new_pos))
 
 		return moves

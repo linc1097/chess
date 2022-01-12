@@ -7,16 +7,14 @@ class Move:
 	castle = 0
 	en_passant = False
 	piece = None
-	x = 0
-	y = 0
+	position = 0
 
-	def __init__(self, piece, x, y, promote = 0, castle = 0, en_passant = False):
+	def __init__(self, piece, position, promote = 0, castle = 0, en_passant = False):
 		self.promote = promote
 		self.castle = castle
 		self.en_passant = en_passant
 		self.piece = piece
-		self.x = x
-		self.y = y
+		self.position = position
 
 	def __str__(self):
-		return '(' + str(self.x) + ', ' + str(self.y) + ')'
+		return '(' + '(' + str(self.position%8) + ', ' + str(self.position//8)  + ') , ' + str(self.piece) + ')'
