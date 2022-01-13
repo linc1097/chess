@@ -8,6 +8,10 @@ from move import Move
 class Utils:
 
 	@staticmethod
+	def position_to_coordinates(position):
+		return (position%8, position//8)
+
+	@staticmethod
 	def print_board(board):
 		i = 0
 		for piece in board:

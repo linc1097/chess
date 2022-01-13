@@ -1,4 +1,5 @@
 import pygame
+import chess
 
 class Constants:
 	PAWN = 1
@@ -62,6 +63,28 @@ class Constants:
 	black_bishop = pygame.transform.scale(black_bishop, (SQUARE_SIZE, SQUARE_SIZE))
 	black_pawn = pygame.image.load('images/black_pawn.png')
 	black_pawn = pygame.transform.scale(black_pawn, (SQUARE_SIZE, SQUARE_SIZE))
+
+	SQUARE_TO_COORDINATE = {chess.A8: (0,0), chess.B8: (1,0), chess.C8: (2,0), chess.D8: (3,0), chess.E8: (4,0), chess.F8: (5,0), chess.G8: (6,0), chess.H8: (7,0), 
+							chess.A7: (0,1), chess.B7: (1,1), chess.C7: (2,1), chess.D7: (3,1), chess.E7: (4,1), chess.F7: (5,1), chess.G7: (6,1), chess.H7: (7,1), 
+							chess.A6: (0,2), chess.B6: (1,2), chess.C6: (2,2), chess.D6: (3,2), chess.E6: (4,2), chess.F6: (5,2), chess.G6: (6,2), chess.H6: (7,2), 
+							chess.A5: (0,3), chess.B5: (1,3), chess.C5: (2,3), chess.D5: (3,3), chess.E5: (4,3), chess.F5: (5,3), chess.G5: (6,3), chess.H5: (7,3), 
+							chess.A4: (0,4), chess.B4: (1,4), chess.C4: (2,4), chess.D4: (3,4), chess.E4: (4,4), chess.F4: (5,4), chess.G4: (6,4), chess.H4: (7,4), 
+							chess.A3: (0,5), chess.B3: (1,5), chess.C3: (2,5), chess.D3: (3,5), chess.E3: (4,5), chess.F3: (5,5), chess.G3: (6,5), chess.H3: (7,5), 
+							chess.A2: (0,6), chess.B2: (1,6), chess.C2: (2,6), chess.D2: (3,6), chess.E2: (4,6), chess.F2: (5,6), chess.G2: (6,6), chess.H2: (7,6), 
+							chess.A1: (0,7), chess.B1: (1,7), chess.C1: (2,7), chess.D1: (3,7), chess.E1: (4,7), chess.F1: (5,7), chess.G1: (6,7), chess.H1: (7,7)
+							     }
+
+	COORDINATE_TO_SQUARE = {v: k for k, v in SQUARE_TO_COORDINATE.items()}
+
+	PIECE_TO_IMAGE_API = {'P': white_pawn, 'B': white_bishop, 'N': white_knight,
+					  'R': white_rook, 'Q': white_queen, 'K': white_king,
+					  'p': black_pawn, 'b': black_bishop, 'n': black_knight,
+					  'r': black_rook, 'q': black_queen, 'k': black_king	}
+
+	PIECE_TO_VALUE_API = {'P': 1, 'B': 3, 'N': 3,
+				 		  'R': 5, 'Q': 9, 'K': 100,
+				  		  'p': -1, 'b': -3, 'n': -3,
+				  		  'r': -5, 'q': -9, 'k': -100	}
 
 	PIECE_TO_IMAGE_WHITE = {1: white_pawn, 2: white_bishop, 3: white_knight,
 							4: white_rook, 5: white_queen, 6: white_king}

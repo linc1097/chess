@@ -5,6 +5,7 @@ from constants import Constants as C
 from chess_utils import Utils
 from move import Move
 from player import Player, HumanPlayer, RandomPlayer, MiniMaxPlayer
+import chess
 
 class Game:
 
