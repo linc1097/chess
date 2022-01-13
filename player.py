@@ -51,16 +51,8 @@ class MiniMaxPlayerAPI(Player):
 	def make_move(self, board, screen = None):
 		start = time.time()
 		self.num_eval = 0
-		moves = self.order_moves(board.legal_moves, board)
-		best_num = -101
-		best_move = None
-		for move in moves:
-			board.push(move)
-			num = self.make_move_helper(board, 2, False)
-			board.pop()
-			if num > best_num:
-				best_num = num
-				best_move = move
+		num, best_move = self.make_move_helper(board, 6, True)
+		print(best_move)
 		end = time.time()
 		print('time: ' + str(end-start))
 		print('moves: ' + str(self.num_eval))
@@ -77,12 +69,6 @@ class MiniMaxPlayerAPI(Player):
 		for move in moves:
 			piece = board.piece_at(move.from_square)
 			take_piece = board.piece_at(move.to_square)
-			if piece.piece_type != chess.PAWN:
-				attackers = board.attackers(not self.color, move.from_square)
-				for attacker in attackers:
-					if board.piece_at(attacker).piece_type == chess.PAWN:
-						first.append(move)
-						continue
 			if take_piece:
 				if C.PIECE_TO_VALUE_API[piece.symbol()] < C.PIECE_TO_VALUE_API[take_piece.symbol()]:
 					first.append(move)
@@ -99,48 +85,51 @@ class MiniMaxPlayerAPI(Player):
 
 	def make_move_helper(self, board, depth, maximizing_player, alpha = -200, beta = 200):
 		if depth == 0:
-			return self.evaluate_board_simple(board)
+			return (self.evaluate_board_simple(board), None)
 
 		if maximizing_player:
-			moves = board.legal_moves
+			moves = self.order_moves(board.legal_moves, board)
 			if not moves:
 				if board.is_check():
-					return -100
+					return (-100, None)
 				else:
-					return 0
+					return (0, None)
 			best = -101
+			best_move = None
 			for move in moves:
 				board.push(move)
-				num = self.make_move_helper(board, depth-1, False, alpha = alpha, beta = beta)
+				num, x = self.make_move_helper(board, depth-1, False, alpha = alpha, beta = beta)
 				board.pop()
 				if num > alpha:
 					alpha = num
 				if num > best:
 					best = num
+					best_move = move
 				if beta <= alpha:
 					break
-			return best
+			return (best, best_move)
 		else: 
-			#moves = Utils.all_legal_moves(board, Utils.opposing_color(self.color), check = True)
-			moves = board.legal_moves
+			moves = self.order_moves(board.legal_moves, board)
 
 			if not moves:
 				if board.is_check():
-					return 100
+					return (100, None)
 				else:
-					return 0
+					return (0, None)
 			worst = 101
+			worst_move = None
 			for move in moves:
 				board.push(move)
-				num = self.make_move_helper(board, depth-1, True, alpha = alpha, beta = beta)
+				num, x= self.make_move_helper(board, depth-1, True, alpha = alpha, beta = beta)
 				board.pop()
 				if num < beta:
 					beta = num
 				if num < worst:
 					worst = num
+					worst_move = move
 				if beta <= alpha:
 					break
-			return worst
+			return (worst, worst_move)
 
 class MiniMaxPlayer(Player):
 

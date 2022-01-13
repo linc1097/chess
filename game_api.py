@@ -12,7 +12,7 @@ class Game:
 		screen = pygame.display.set_mode((C.BOARD_SIZE, C.BOARD_SIZE))
 		pygame.display.set_caption('CHESS')
 
-		white = RandomPlayerAPI(color = chess.WHITE)
+		white = HumanPlayerAPI(color = chess.WHITE)
 		black = MiniMaxPlayerAPI(color = chess.BLACK)
 		while True:
 			pygame.event.get()
