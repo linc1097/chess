@@ -34,10 +34,6 @@ class Constants:
 
 	RESULT = {1: "Black Wins!", 2: "White Wins!", 3: "Draw"}
 
-	TEXT_TO_PIECE = {"pawn": 1, "bishop": 2,
-					 "knight": 3, "rook": 4, 
-					 "queen": 5,  "king": 6}
-
 	white_king = pygame.image.load('images/white_king.png')
 	white_king = pygame.transform.scale(white_king, (SQUARE_SIZE, SQUARE_SIZE))
 	white_queen = pygame.image.load('images/white_queen.png')
@@ -85,11 +81,3 @@ class Constants:
 				 		  'R': 5, 'Q': 9, 'K': 100,
 				  		  'p': -1, 'b': -3, 'n': -3,
 				  		  'r': -5, 'q': -9, 'k': -100	}
-
-	PIECE_TO_IMAGE_WHITE = {1: white_pawn, 2: white_bishop, 3: white_knight,
-							4: white_rook, 5: white_queen, 6: white_king}
-
-	PIECE_TO_IMAGE_BLACK = {1: black_pawn, 2: black_bishop, 3: black_knight,
-							4: black_rook, 5: black_queen, 6: black_king}
-
-	PIECE_TO_IMAGE = {WHITE: PIECE_TO_IMAGE_WHITE, BLACK: PIECE_TO_IMAGE_BLACK}
