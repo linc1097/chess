@@ -130,8 +130,21 @@ class MiniMaxPlayer(Player):
 
 	num_eval = 0
 
-	def evaluate_board_simple(self, board):
-		self.num_eval += 1
+	def is_draw(self, board):
+		return board.is_stalemate() or board.is_insufficient_material() or board.can_claim_draw()
+
+	def num_squares_controlled(self, board, color):
+		num_squares = 0
+		for square in chess.SQUARES:
+			if board.is_attacked_by(color, square):
+				num_squares += 1
+		return num_squares
+
+	def difference_in_square_control(self, board):
+		return self.num_squares_controlled(board, self.color) - self.num_squares_controlled(board, not self.color)
+
+
+	def material_count(self, board):
 		evaluation = 0
 		board_string = str(board)
 		for char in board_string:
@@ -141,21 +154,51 @@ class MiniMaxPlayer(Player):
 			evaluation *= -1
 		return evaluation
 
+	def evaluate_board(self, board):
+		self.num_eval += 1
+		return self.material_count(board)
+
+	def allows_tie(self, board):
+		moves = board.legal_moves
+		for move in moves:
+			board.push(move)
+			if self.is_draw(board):
+				board.pop()
+				return True
+			else:
+				board.pop()
+
 
 	def make_move(self, board, screen = None):
 		start = time.time()
 		self.num_eval = 0
 		num, best_move = self.make_move_helper(board, 4, True)
-		print(best_move)
 		end = time.time()
 		print('time: ' + str(end-start))
 		print('moves: ' + str(self.num_eval))
 		print('ratio: ' + str(self.num_eval/(end-start)))
 
-
+		if self.evaluate_board(board) >= 0:
+			board.push(best_move)
+			if self.is_draw(board):
+				board.pop()
+				num, best_move =  self.make_move_helper(board, 4, True, forbidden_move=best_move)
+			elif self.allows_tie(board):
+				board.pop()
+				num, best_move =  self.make_move_helper(board, 4, True, forbidden_move=best_move)
+			else:
+				board.pop()
+				
 		return best_move
 
-	def order_moves(self, moves, board):
+	def attacked_by_pawn(self, color, square, board):
+		attacked_by = board.attackers(color, square)
+		for attacker in attacked_by:
+			if board.piece_at(attacker).piece_type == chess.PAWN:
+				return True
+		return False
+
+	def order_moves(self, moves, board, color):
 		first = []
 		second = []
 		third = []
@@ -163,13 +206,16 @@ class MiniMaxPlayer(Player):
 		for move in moves:
 			piece = board.piece_at(move.from_square)
 			take_piece = board.piece_at(move.to_square)
+			if piece.piece_type != chess.PAWN:
+				if self.attacked_by_pawn(not color, move.to_square, board):
+					fourth.append(move)
+					continue
+
 			if take_piece:
 				if C.PIECE_TO_VALUE_API[piece.symbol()] < C.PIECE_TO_VALUE_API[take_piece.symbol()]:
 					first.append(move)
 				else:
 					second.append(move)
-			elif piece.piece_type == chess.PAWN:
-				third.append(move)
 			else:
 				fourth.append(move)
 		first.extend(second)
@@ -177,18 +223,20 @@ class MiniMaxPlayer(Player):
 		first.extend(fourth)
 		return first
 
-	def make_move_helper(self, board, depth, maximizing_player, alpha = -200, beta = 200):
+	def make_move_helper(self, board, depth, maximizing_player, alpha = -20000, beta = 20000, forbidden_move=None):
 		if depth == 0:
-			return (self.evaluate_board_simple(board), None)
+			return (self.evaluate_board(board), None)
 
 		if maximizing_player:
-			moves = self.order_moves(board.legal_moves, board)
+			moves = self.order_moves(board.legal_moves, board, self.color)
+			if forbidden_move:
+				moves.remove(forbidden_move)
 			if not moves:
 				if board.is_check():
-					return (-100, None)
+					return (-10000, None)
 				else:
 					return (0, None)
-			best = -101
+			best = -10001
 			best_move = None
 			for move in moves:
 				board.push(move)
@@ -203,18 +251,18 @@ class MiniMaxPlayer(Player):
 					break
 			return (best, best_move)
 		else: 
-			moves = self.order_moves(board.legal_moves, board)
+			moves = self.order_moves(board.legal_moves, board, not self.color)
 
 			if not moves:
 				if board.is_check():
-					return (100, None)
+					return (10000, None)
 				else:
 					return (0, None)
-			worst = 101
+			worst = 10001
 			worst_move = None
 			for move in moves:
 				board.push(move)
-				num, x= self.make_move_helper(board, depth-1, True, alpha = alpha, beta = beta)
+				num, x = self.make_move_helper(board, depth-1, True, alpha = alpha, beta = beta)
 				board.pop()
 				if num < beta:
 					beta = num
@@ -224,3 +272,12 @@ class MiniMaxPlayer(Player):
 				if beta <= alpha:
 					break
 			return (worst, worst_move)
+
+class MiniMaxEvalOnePlayer(MiniMaxPlayer):
+
+	def evaluate_board(self, board):
+		self.num_eval += 1
+		material_count = self.material_count(board)
+		return material_count + self.difference_in_square_control(board)
+
+
