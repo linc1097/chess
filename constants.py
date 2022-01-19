@@ -30,7 +30,8 @@ class Constants:
 	WHITE_WIN = 2
 	DRAW = 3
 
-	PIECE_VALUE = {PAWN: 100, BISHOP: 300, KNIGHT: 300, ROOK: 500, QUEEN: 900, KING: 0}
+	PIECE_VALUE = {'p': -100, 'b': -300, 'n': -300, 'r': -500, 'q': -900, 'k': 0, 
+				   'P': 100, 'B': 300, 'N': 300, 'R': 500, 'Q': 900, 'K': 0}
 
 	RESULT = {1: "Black Wins!", 2: "White Wins!", 3: "Draw"}
 
@@ -76,8 +77,3 @@ class Constants:
 					  'R': white_rook, 'Q': white_queen, 'K': white_king,
 					  'p': black_pawn, 'b': black_bishop, 'n': black_knight,
 					  'r': black_rook, 'q': black_queen, 'k': black_king	}
-
-	PIECE_TO_VALUE_API = {'P': 1, 'B': 3, 'N': 3,
-				 		  'R': 5, 'Q': 9, 'K': 100,
-				  		  'p': -1, 'b': -3, 'n': -3,
-				  		  'r': -5, 'q': -9, 'k': -100	}

@@ -129,6 +129,7 @@ class HumanPlayer(Player):
 class MiniMaxPlayer(Player):
 
 	num_eval = 0
+	depth = 4
 
 	def is_draw(self, board):
 		return board.is_stalemate() or board.is_insufficient_material() or board.can_claim_draw()
@@ -148,9 +149,9 @@ class MiniMaxPlayer(Player):
 		evaluation = 0
 		board_string = str(board)
 		for char in board_string:
-			if char in C.PIECE_TO_VALUE_API:
-				evaluation += C.PIECE_TO_VALUE_API[char]
-		if not self.color:
+			if char in C.PIECE_VALUE:
+				evaluation += C.PIECE_VALUE[char]
+		if self.color == chess.BLACK:
 			evaluation *= -1
 		return evaluation
 
@@ -172,7 +173,7 @@ class MiniMaxPlayer(Player):
 	def make_move(self, board, screen = None):
 		start = time.time()
 		self.num_eval = 0
-		num, best_move = self.make_move_helper(board, 4, True)
+		num, best_move = self.make_move_helper(board, self.depth, True)
 		end = time.time()
 		print('time: ' + str(end-start))
 		print('moves: ' + str(self.num_eval))
@@ -182,10 +183,10 @@ class MiniMaxPlayer(Player):
 			board.push(best_move)
 			if self.is_draw(board):
 				board.pop()
-				num, best_move =  self.make_move_helper(board, 4, True, forbidden_move=best_move)
+				num, best_move =  self.make_move_helper(board, self.depth, True, forbidden_move=best_move)
 			elif self.allows_tie(board):
 				board.pop()
-				num, best_move =  self.make_move_helper(board, 4, True, forbidden_move=best_move)
+				num, best_move =  self.make_move_helper(board, self.depth, True, forbidden_move=best_move)
 			else:
 				board.pop()
 				
@@ -212,7 +213,7 @@ class MiniMaxPlayer(Player):
 					continue
 
 			if take_piece:
-				if C.PIECE_TO_VALUE_API[piece.symbol()] < C.PIECE_TO_VALUE_API[take_piece.symbol()]:
+				if C.PIECE_VALUE[piece.symbol()] < C.PIECE_VALUE[take_piece.symbol()]:
 					first.append(move)
 				else:
 					second.append(move)
@@ -222,6 +223,7 @@ class MiniMaxPlayer(Player):
 		first.extend(third)
 		first.extend(fourth)
 		return first
+
 
 	def make_move_helper(self, board, depth, maximizing_player, alpha = -20000, beta = 20000, forbidden_move=None):
 		if depth == 0:
@@ -278,6 +280,6 @@ class MiniMaxEvalOnePlayer(MiniMaxPlayer):
 	def evaluate_board(self, board):
 		self.num_eval += 1
 		material_count = self.material_count(board)
-		return material_count + self.difference_in_square_control(board)
+		return (material_count + self.difference_in_square_control(board))
 
 
