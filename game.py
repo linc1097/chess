@@ -1,7 +1,7 @@
 import chess 
 import pygame
 import time
-from player import Player, RandomPlayer, HumanPlayer, MiniMaxPlayer, MiniMaxEvalOnePlayer
+from player import Player, RandomPlayer, HumanPlayer, MiniMaxPlayer, MiniMaxEvalOnePlayer, MiniMaxEvalTwoPlayer
 from constants import Constants as C
 
 class Game:
@@ -12,8 +12,8 @@ class Game:
 		screen = pygame.display.set_mode((C.BOARD_SIZE, C.BOARD_SIZE))
 		pygame.display.set_caption('CHESS')
 
-		white = MiniMaxPlayer(color = chess.WHITE)
-		black = MiniMaxEvalOnePlayer(color = chess.BLACK)
+		white = HumanPlayer(color = chess.WHITE)
+		black = MiniMaxEvalTwoPlayer(color = chess.BLACK)
 		while True:
 			pygame.event.get()
 			self.draw_board(screen)
@@ -26,7 +26,7 @@ class Game:
 
 			move = white.make_move(self.board, screen = screen)
 			self.board.push(move)
-		
+
 			self.draw_board(screen)
 			pygame.display.update()
 

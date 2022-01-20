@@ -4,6 +4,8 @@ import random
 import time
 import chess
 import math
+import copy
+
 
 class Player:
 	king = None
@@ -72,7 +74,8 @@ class HumanPlayer(Player):
 	def draw_piece_at(self, screen, piece, x, y):
 		screen.blit(C.PIECE_TO_IMAGE_API[piece.symbol()], (x, y))
 
-	def make_move(self, board, screen = None):
+	def make_move(self, board_original, screen = None):
+		board = copy.copy(board_original)
 		running = True
 		dragging = False
 		moves = []
@@ -154,6 +157,44 @@ class MiniMaxPlayer(Player):
 		if self.color == chess.BLACK:
 			evaluation *= -1
 		return evaluation
+
+	def is_passed_pawn(self, piece, piece_square, board):
+		if piece.color == chess.WHITE:
+			mult = 1
+		else:
+			mult = -1
+
+		right_edge = piece_square % 8 == 7
+		left_edge = piece_square % 8 == 0
+
+		for i in range(1,8,1):
+			square_ahead = piece_square+(8*mult*i)
+			if square_ahead < 0 or square_ahead > 63:
+				break
+			squares = [square_ahead]
+			if not left_edge:
+				squares.append(square_ahead-1)
+			if not right_edge:
+				squares.append(square_ahead+1)
+			for square in squares:
+				piece_ahead = board.piece_at(square)
+				if piece_ahead and piece_ahead.piece_type == chess.PAWN and piece_ahead.color != piece.color:
+					return False
+
+		return True
+
+	def passed_pawn_heuristic(self, board):
+		total = 0
+		for square in chess.SQUARES:
+			piece = board.piece_at(square)
+			if piece and piece.piece_type == chess.PAWN:
+				if self.is_passed_pawn(piece, square, board):
+					if piece.color == self.color:
+						total += 1
+					else:
+						total -= 1
+
+		return total*30
 
 	def evaluate_board(self, board):
 		self.num_eval += 1
@@ -276,6 +317,13 @@ class MiniMaxPlayer(Player):
 			return (worst, worst_move)
 
 class MiniMaxEvalOnePlayer(MiniMaxPlayer):
+
+	def evaluate_board(self, board):
+		self.num_eval += 1
+		material_count = self.material_count(board)
+		return (material_count + self.difference_in_square_control(board) + self.passed_pawn_heuristic(board))
+
+class MiniMaxEvalTwoPlayer(MiniMaxPlayer):
 
 	def evaluate_board(self, board):
 		self.num_eval += 1
