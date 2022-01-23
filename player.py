@@ -17,12 +17,12 @@ class Player:
 		self.king = king
 		self.other_king = other_king
 
-	def make_move(self, board, screen = None):
+	def make_move(self, board, screen = None, file = None):
 		pass
 
 class RandomPlayer(Player):
 	
-	def make_move(self, board, screen = None):
+	def make_move(self, board, screen = None, file = None):
 		possible_moves = board.legal_moves
 		return random.choice(list(possible_moves))
 
@@ -68,13 +68,15 @@ class HumanPlayer(Player):
 	def highlight_moves(self, moves, screen):
 		for move in moves:
 			x, y = C.SQUARE_TO_COORDINATE[move.to_square]
-			rect = pygame.Rect(C.SQUARE_SIZE*(x), C.SQUARE_SIZE*(y), C.SQUARE_SIZE, C.SQUARE_SIZE)
-			pygame.draw.rect(screen, C.BLACK, rect)
+			rect = pygame.Surface((C.SQUARE_SIZE, C.SQUARE_SIZE))
+			rect.set_alpha(C.OPACITY)
+			rect.fill(C.BLACK)
+			screen.blit(rect, (C.SQUARE_SIZE*(x), C.SQUARE_SIZE*(y)))
 
 	def draw_piece_at(self, screen, piece, x, y):
 		screen.blit(C.PIECE_TO_IMAGE_API[piece.symbol()], (x, y))
 
-	def make_move(self, board_original, screen = None):
+	def make_move(self, board_original, screen = None, file = None):
 		board = copy.copy(board_original)
 		running = True
 		dragging = False
@@ -132,10 +134,34 @@ class HumanPlayer(Player):
 class MiniMaxPlayer(Player):
 
 	num_eval = 0
-	depth = 4
+	depth = 3
+
+	def board_to_encoding(self, board):
+		nn_rep = []
+		for square in range(64):
+			nn_rep_square = [0,0,0,0,0,0,0,0,0,0,0,0]
+			piece = board.piece_at(square)
+			if piece:
+				mult = piece.color
+				piece_num = piece.piece_type - 1
+				nn_rep_square[piece_num + 6*mult] = 1
+			nn_rep.extend(nn_rep_square)
+		return nn_rep
 
 	def is_draw(self, board):
 		return board.is_stalemate() or board.is_insufficient_material() or board.can_claim_draw()
+
+	def pawn_advancement(self, board):
+		total = 0
+		for square in range(64):
+			piece = board.piece_at(square)
+			if piece:
+				if piece.piece_type == chess.PAWN:
+					if piece.color == chess.WHITE:
+						total += square % 8
+					else:
+						total -= 7 - (square % 8)
+		return total
 
 	def num_squares_controlled(self, board, color):
 		num_squares = 0
@@ -145,7 +171,7 @@ class MiniMaxPlayer(Player):
 		return num_squares
 
 	def difference_in_square_control(self, board):
-		return self.num_squares_controlled(board, self.color) - self.num_squares_controlled(board, not self.color)
+		return self.num_squares_controlled(board, chess.WHITE) - self.num_squares_controlled(board, chess.BLACK)
 
 
 	def material_count(self, board):
@@ -154,8 +180,6 @@ class MiniMaxPlayer(Player):
 		for char in board_string:
 			if char in C.PIECE_VALUE:
 				evaluation += C.PIECE_VALUE[char]
-		if self.color == chess.BLACK:
-			evaluation *= -1
 		return evaluation
 
 	def is_passed_pawn(self, piece, piece_square, board):
@@ -189,15 +213,23 @@ class MiniMaxPlayer(Player):
 			piece = board.piece_at(square)
 			if piece and piece.piece_type == chess.PAWN:
 				if self.is_passed_pawn(piece, square, board):
-					if piece.color == self.color:
+					if piece.color == chess.WHITE:
 						total += 1
 					else:
 						total -= 1
 
 		return total*30
 
-	def evaluate_board(self, board):
+	def evaluate_board(self, board, file):
 		self.num_eval += 1
+		evaluation = self.material_count(board)
+		if file:
+			data = str(self.board_to_encoding(board))[1:-1]
+			data += ', ' + str(evaluation)
+			file.write(data)
+			file.write('\n')
+		if self.color == chess.BLACK:
+			evaluation *= -1
 		return self.material_count(board)
 
 	def allows_tie(self, board):
@@ -211,23 +243,23 @@ class MiniMaxPlayer(Player):
 				board.pop()
 
 
-	def make_move(self, board, screen = None):
+	def make_move(self, board, screen = None, file = None):
 		start = time.time()
 		self.num_eval = 0
-		num, best_move = self.make_move_helper(board, self.depth, True)
+		num, best_move = self.make_move_helper(board, self.depth, True, file = file)
 		end = time.time()
 		print('time: ' + str(end-start))
 		print('moves: ' + str(self.num_eval))
 		print('ratio: ' + str(self.num_eval/(end-start)))
 
-		if self.evaluate_board(board) >= 0:
+		if self.evaluate_board(board, file) >= 0:
 			board.push(best_move)
 			if self.is_draw(board):
 				board.pop()
-				num, best_move =  self.make_move_helper(board, self.depth, True, forbidden_move=best_move)
+				num, best_move =  self.make_move_helper(board, self.depth, True, forbidden_move=best_move, file = file)
 			elif self.allows_tie(board):
 				board.pop()
-				num, best_move =  self.make_move_helper(board, self.depth, True, forbidden_move=best_move)
+				num, best_move =  self.make_move_helper(board, self.depth, True, forbidden_move=best_move, file = file)
 			else:
 				board.pop()
 				
@@ -266,9 +298,9 @@ class MiniMaxPlayer(Player):
 		return first
 
 
-	def make_move_helper(self, board, depth, maximizing_player, alpha = -20000, beta = 20000, forbidden_move=None):
+	def make_move_helper(self, board, depth, maximizing_player, alpha = -20000, beta = 20000, forbidden_move=None, file = None):
 		if depth == 0:
-			return (self.evaluate_board(board), None)
+			return (self.evaluate_board(board, file), None)
 
 		if maximizing_player:
 			moves = self.order_moves(board.legal_moves, board, self.color)
@@ -276,14 +308,14 @@ class MiniMaxPlayer(Player):
 				moves.remove(forbidden_move)
 			if not moves:
 				if board.is_check():
-					return (-10000, None)
+					return (-10000, forbidden_move)
 				else:
-					return (0, None)
+					return (0, forbidden_move)
 			best = -10001
 			best_move = None
 			for move in moves:
 				board.push(move)
-				num, x = self.make_move_helper(board, depth-1, False, alpha = alpha, beta = beta)
+				num, x = self.make_move_helper(board, depth-1, False, alpha = alpha, beta = beta, file = file)
 				board.pop()
 				if num > alpha:
 					alpha = num
@@ -298,14 +330,16 @@ class MiniMaxPlayer(Player):
 
 			if not moves:
 				if board.is_check():
+					print('3')
 					return (10000, None)
 				else:
+					print('4')
 					return (0, None)
 			worst = 10001
 			worst_move = None
 			for move in moves:
 				board.push(move)
-				num, x = self.make_move_helper(board, depth-1, True, alpha = alpha, beta = beta)
+				num, x = self.make_move_helper(board, depth-1, True, alpha = alpha, beta = beta, file = file)
 				board.pop()
 				if num < beta:
 					beta = num
@@ -318,16 +352,30 @@ class MiniMaxPlayer(Player):
 
 class MiniMaxEvalOnePlayer(MiniMaxPlayer):
 
-	def evaluate_board(self, board):
+	def evaluate_board(self, board, file):
 		self.num_eval += 1
 		material_count = self.material_count(board)
-		return (material_count + self.difference_in_square_control(board) + self.passed_pawn_heuristic(board))
+		evaluation = (material_count + self.difference_in_square_control(board) + self.passed_pawn_heuristic(board) + self.pawn_advancement(board))
+		if file:
+			data = str(self.board_to_encoding(board))[1:-1]
+			data += ', ' + str(evaluation)
+			file.write(data)
+			file.write('\n')
+		if self.color == chess.BLACK:
+			evaluation *= -1
+		return evaluation
 
 class MiniMaxEvalTwoPlayer(MiniMaxPlayer):
 
-	def evaluate_board(self, board):
+	def evaluate_board(self, board, file):
 		self.num_eval += 1
 		material_count = self.material_count(board)
-		return (material_count + self.difference_in_square_control(board))
-
-
+		evaluation = (material_count + self.difference_in_square_control(board))
+		if file:
+			data = str(self.board_to_encoding(board))[1:-1]
+			data += ', ' + str(evaluation)
+			file.write(data)
+			file.write('\n')
+		if self.color == chess.BLACK:
+			evaluation *= -1
+		return evaluation
